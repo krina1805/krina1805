@@ -1,0 +1,111 @@
+{
+  "theme": "LIGHT",
+  "archetype": "1 (Organic & Earthy)",
+  "domain": "Healthcare & Professional Services Hub",
+  "mood": "Calm, Empathetic, Trustworthy, Organic",
+  "colors": {
+    "background": {
+      "default": "#F9F8F5",
+      "surface": "#FFFFFF",
+      "chat_bot": "#F1EFEA",
+      "chat_user": "#1A3629",
+      "glass": "rgba(255, 255, 255, 0.7)"
+    },
+    "text": {
+      "primary": "#1A1D1C",
+      "secondary": "#5C6661",
+      "inverse": "#FFFFFF",
+      "accent": "#C16252"
+    },
+    "border": {
+      "default": "#E8E5DD",
+      "focus": "#1A3629"
+    },
+    "brand": {
+      "primary": "#1A3629",
+      "primary_hover": "#264D3A",
+      "secondary": "#8A9A86",
+      "accent": "#C16252",
+      "accent_hover": "#A85344"
+    }
+  },
+  "typography": {
+    "fonts": {
+      "heading": "'Outfit', sans-serif",
+      "body": "'Manrope', sans-serif",
+      "mono": "'JetBrains Mono', monospace"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight font-light",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-medium",
+      "h3": "text-xl sm:text-2xl tracking-tight font-medium",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body_large": "text-lg leading-relaxed",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm text-[#5C6661]",
+      "overline": "text-xs font-bold tracking-[0.2em] uppercase text-[#8A9A86]"
+    }
+  },
+  "layout_and_spacing": {
+    "container": "Generous spacing. Main chat/content area uses p-6 md:p-12.",
+    "sidebar": "Collapsible left sidebar for switching between the 6 agents. Standard SaaSFame pattern. Width: 280px or collapsed to icon-only.",
+    "chat_bento": "Use bento grid layout for dashboard overview (Agent Selection Mode), or a full height flex layout for Active Agent Chats.",
+    "borders_and_radius": "Subtle roundness. rounded-2xl for main cards, rounded-[2rem] for chat bubbles (with asymmetrical border-radius for speech tail effect).",
+    "glassmorphism": "Use backdrop-blur-xl bg-white/70 for sticky headers or floating navs. 1px solid border-white/40."
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#1A3629] text-white hover:bg-[#264D3A] rounded-full px-8 py-4 transition-all duration-300",
+      "secondary": "bg-[#F1EFEA] text-[#1A1D1C] hover:bg-[#E8E5DD] rounded-full px-8 py-4 transition-all duration-300",
+      "accent": "bg-[#C16252] text-white hover:bg-[#A85344] rounded-full px-8 py-4 transition-all duration-300"
+    },
+    "inputs": {
+      "default": "Shadcn UI Input/Textarea heavily customized: bg-white border-[#E8E5DD] rounded-xl px-4 py-3 text-base focus:ring-2 focus:ring-[#1A3629]/20 focus:border-[#1A3629] transition-all"
+    },
+    "chat_bubbles": {
+      "bot": "bg-[#F1EFEA] text-[#1A1D1C] rounded-3xl rounded-tl-sm p-6 shadow-sm border border-[#E8E5DD]/50",
+      "user": "bg-[#1A3629] text-white rounded-3xl rounded-tr-sm p-6 shadow-md"
+    },
+    "forms": {
+      "structure": "For Job Application, Feedback, and Appointment agents: Use Shadcn Form, Input, Select, Calendar. Go cardless or use very subtle flat white cards with 1px border. Generous spacing (gap-6) between fields."
+    }
+  },
+  "animations": {
+    "hover": "Smooth transform translations (-translate-y-1) for agent selection cards. transition-all duration-300 ease-out.",
+    "chat_entrance": "Staggered fade-up for messages using framer-motion. initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}.",
+    "interactions": "Micro-interactions on buttons (scale down 0.98 on active)."
+  },
+  "assets": {
+    "icons": "Use @phosphor-icons/react for duotone, friendly organic icons.",
+    "images": {
+      "healthcare_hero_bg": {
+        "url": "https://static.prod-images.emergentagent.com/jobs/85c8ae67-c17b-4832-a183-28703bc48d80/images/79e52084f49bee922cadcd256d768898fac5fc2a4c86fa6fd168837afc5ffb8d.png",
+        "description": "Abstract warm earthy tones background for empty states or login screens."
+      },
+      "agent_avatar_female": {
+        "url": "https://static.prod-images.emergentagent.com/jobs/85c8ae67-c17b-4832-a183-28703bc48d80/images/8f900730b6f0bdc3b684ee4b5fabfa41ba5b5402cabb1ecc7d5370b8fd439d65.png",
+        "description": "Friendly female agent avatar (Healthcare, Customer Support)."
+      },
+      "agent_avatar_male": {
+        "url": "https://static.prod-images.emergentagent.com/jobs/85c8ae67-c17b-4832-a183-28703bc48d80/images/21c199f557f77f2442e9433d9eb563e6097176f37c7729122d5523fbbeb4d559.png",
+        "description": "Empathetic male agent avatar (Job Applications, Medical Appointments)."
+      }
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure white text on #1A3629 and #1A1D1C text on #F1EFEA pass WCAG AA/APCA.",
+    "testing": "All interactive elements must include 'data-testid' attribute (e.g., data-testid='agent-select-healthcare').",
+    "motion": "Respect prefers-reduced-motion."
+  },
+  "instructions_to_main_agent": [
+    "Install required dependencies: yarn add @phosphor-icons/react framer-motion lucide-react",
+    "Add fonts: Load Outfit and Manrope from Google Fonts in index.html or global css.",
+    "Configure Tailwind: Update tailwind.config.js with the provided colors, fonts, and borderRadius extensions.",
+    "Layout Architecture: Create a main Dashboard layout with a left sidebar (Navigation for the 6 agents) and a main content area. Implement a top header using the 'glassmorphism' rules.",
+    "Agent Hub: Create a landing view within the dashboard (Bento grid) showcasing all 6 available agents: 1. Healthcare AI, 2. Job Application Agent, 3. Customer Support, 4. Client Feedback, 5. Appointment Request, 6. Customer Service.",
+    "Chat Interface: Implement a unified chat interface. Each agent should have its own context, but share the same beautiful UI. Use the chat_bubbles styling provided.",
+    "Forms UI: For Job Application, Medical Appointments, and Feedback, intersperse the chat UI with rich, interactive Shadcn forms (e.g., bot asks 'Please fill out your details', rendering a beautiful inline form card).",
+    "Use the provided avatars for the bots depending on the persona (e.g., agent_avatar_female for Healthcare, agent_avatar_male for Appointments).",
+    "Maintain the generous spacing (p-6 to p-12) and organic feel. Avoid harsh lines, deep black (#000000), or pure blue/red. Use the semantic colors strictly."
+  ]
+}
