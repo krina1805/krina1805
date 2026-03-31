@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, PaperPlaneTilt } from '@phosphor-icons/react';
+import { PaperPlaneTilt, Heart, Barbell, FirstAid, Leaf } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -9,7 +8,6 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const HealthcareChat = () => {
-  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,22 +23,25 @@ const HealthcareChat = () => {
   }, [messages]);
 
   useEffect(() => {
-    // Load chat history
     const loadHistory = async () => {
       try {
         const response = await axios.get(`${API}/chat/history/${sessionId}/healthcare`);
         if (response.data.messages && response.data.messages.length > 0) {
           setMessages(response.data.messages);
         } else {
-          // Welcome message
           setMessages([{
             role: 'assistant',
-            content: 'Hello! I\'m your healthcare AI assistant. I can help you with weight management, home remedies, exercise recommendations, and general health advice. How can I assist you today?',
+            content: 'Hello! I\'m your healthcare AI assistant. I can help you with:\n\n• Weight management and healthy weight loss strategies\n• Home remedies for common ailments\n• Exercise recommendations and fitness advice\n• General health and wellness guidance\n• Nutrition tips and dietary suggestions\n\nHow can I assist you today?',
             timestamp: new Date().toISOString()
           }]);
         }
       } catch (error) {
         console.error('Failed to load history:', error);
+        setMessages([{
+          role: 'assistant',
+          content: 'Hello! I\'m your healthcare AI assistant. I can help you with weight management, home remedies, exercise recommendations, and general health advice. How can I assist you today?',
+          timestamp: new Date().toISOString()
+        }]);
       }
     };
     loadHistory();
@@ -88,29 +89,34 @@ const HealthcareChat = () => {
     }
   };
 
+  const quickPrompts = [
+    { icon: Heart, text: 'Weight loss tips', prompt: 'What are some effective tips for healthy weight loss?' },
+    { icon: Barbell, text: 'Exercise advice', prompt: 'Can you recommend exercises for beginners?' },
+    { icon: FirstAid, text: 'Home remedies', prompt: 'What are some home remedies for common cold?' },
+    { icon: Leaf, text: 'Nutrition tips', prompt: 'What should I eat for a balanced diet?' }
+  ];
+
+  const handleQuickPrompt = (prompt) => {
+    setInput(prompt);
+  };
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F9F8F5' }}>
       {/* Header */}
       <header className="backdrop-blur-xl bg-white/70 border-b border-white/40 sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate('/')}
-            className="p-2 rounded-full hover:bg-black/5 transition-colors"
-            data-testid="back-button"
-          >
-            <ArrowLeft size={24} style={{ color: '#1A3629' }} />
-          </button>
-          <div className="flex items-center gap-3">
-            <img 
-              src="https://static.prod-images.emergentagent.com/jobs/85c8ae67-c17b-4832-a183-28703bc48d80/images/8f900730b6f0bdc3b684ee4b5fabfa41ba5b5402cabb1ecc7d5370b8fd439d65.png" 
-              alt="Healthcare AI" 
-              className="w-10 h-10 rounded-full object-cover"
-            />
+        <div className="max-w-5xl mx-auto px-6 py-6">
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: '#C1625215' }}
+            >
+              <Heart size={28} weight="duotone" style={{ color: '#C16252' }} />
+            </div>
             <div>
-              <h1 className="text-xl font-heading font-medium" style={{ color: '#1A1D1C' }} data-testid="chat-title">
-                Healthcare AI
+              <h1 className="text-2xl sm:text-3xl font-heading font-light tracking-tight" style={{ color: '#1A1D1C' }} data-testid="chat-title">
+                Healthcare AI Assistant
               </h1>
-              <p className="text-sm" style={{ color: '#5C6661' }}>Your personal health assistant</p>
+              <p className="text-sm" style={{ color: '#5C6661' }}>Your personal health & wellness guide</p>
             </div>
           </div>
         </div>
@@ -119,6 +125,37 @@ const HealthcareChat = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
+          {messages.length === 1 && messages[0].role === 'assistant' && (
+            <div className="mb-8">
+              <p className="text-sm font-medium mb-4" style={{ color: '#5C6661' }}>Quick questions to get started:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {quickPrompts.map((item, index) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <motion.button
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      onClick={() => handleQuickPrompt(item.prompt)}
+                      className="flex items-center gap-3 p-4 bg-white rounded-xl border hover:shadow-md transition-all duration-300 text-left"
+                      style={{ borderColor: '#E8E5DD' }}
+                      data-testid={`quick-prompt-${index}`}
+                    >
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: '#1A362915' }}
+                      >
+                        <IconComponent size={20} weight="duotone" style={{ color: '#1A3629' }} />
+                      </div>
+                      <span className="text-sm font-medium" style={{ color: '#1A1D1C' }}>{item.text}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {messages.map((message, index) => (
             <motion.div
               key={index}
@@ -167,7 +204,7 @@ const HealthcareChat = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask about weight loss, home remedies, exercises..."
+              placeholder="Ask about weight loss, home remedies, exercises, nutrition..."
               className="flex-1 px-4 py-3 rounded-xl border text-base focus:ring-2 focus:ring-[#1A3629]/20 focus:border-[#1A3629] transition-all outline-none"
               style={{ 
                 backgroundColor: 'white',
@@ -180,14 +217,17 @@ const HealthcareChat = () => {
             <button
               onClick={handleSend}
               disabled={loading || !input.trim()}
-              className="px-8 py-3 rounded-full text-white font-medium transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-3 rounded-full text-white font-medium transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
               style={{ backgroundColor: '#1A3629' }}
+              onMouseEnter={(e) => !loading && !(!input.trim()) && (e.currentTarget.style.backgroundColor = '#264D3A')}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1A3629'}
               data-testid="send-button"
             >
               <PaperPlaneTilt size={20} weight="fill" />
-              Send
+              <span className="hidden sm:inline">Send</span>
             </button>
           </div>
+          <p className="text-xs mt-3 text-center" style={{ color: '#8A9A86' }}>AI-powered healthcare advice. Always consult with healthcare professionals for serious concerns.</p>
         </div>
       </div>
     </div>
