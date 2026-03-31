@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+from openai import AsyncOpenAI
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -144,19 +144,21 @@ async def chat_with_agent(request: ChatRequest):
         
         system_message = system_messages.get(request.agent_type, system_messages["healthcare"])
         
-        # Initialize LLM chat
-        llm_key = os.environ.get('EMERGENT_LLM_KEY')
-        chat = LlmChat(
-            api_key=llm_key,
-            session_id=request.session_id,
-            system_message=system_message
-        ).with_model("openai", "gpt-5.2")
+        # Initialize OpenAI client
+        openai_client = AsyncOpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
         
-        # Create user message
-        user_message = UserMessage(text=request.message)
+        # Build message history for context
+        chat_messages = [{"role": "system", "content": system_message}]
+        for m in history:
+            chat_messages.append({"role": m["role"], "content": m["content"]})
+        chat_messages.append({"role": "user", "content": request.message})
         
         # Get AI response
-        ai_response = await chat.send_message(user_message)
+        response = await openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=chat_messages
+        )
+        ai_response = response.choices[0].message.content
         
         # Save AI response
         await save_chat_message(request.session_id, request.agent_type, "assistant", ai_response)
