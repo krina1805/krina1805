@@ -1,26 +1,32 @@
 # Healthcare FAQ Chatbot (No JavaScript)
 
-This repository now includes a simple AI-style healthcare chatbot that uses:
+A simple AI-style healthcare chatbot organized inside one folder:
+
 - **HTML** (server-rendered UI)
 - **Python + Flask** (backend logic)
-- **SQLite/SQL** (healthcare FAQ storage)
+- **SQLite/SQL** (FAQ storage)
 
-## Files
-- `backend/healthcare_chatbot_app.py` — Flask app, form handling, SQL lookups
-- `backend/templates/healthcare_chatbot.html` — HTML UI with plain form submission (no JS)
-- `backend/sql/healthcare_faqs.sql` — SQL schema + starter FAQ rows
+## Project folder
+All chatbot files are in:
+
+`backend/healthcare_chatbot/`
+
+### Contents
+- `backend/healthcare_chatbot/app.py` — Flask app, form handling, SQL lookups
+- `backend/healthcare_chatbot/templates/healthcare_chatbot.html` — no-JS HTML form UI
+- `backend/healthcare_chatbot/sql/healthcare_faqs.sql` — SQL schema + starter FAQ rows
+- `backend/healthcare_chatbot/healthcare_faq.db` — created automatically at runtime
 
 ## Run locally
 ```bash
 pip install -r backend/requirements.txt
-python backend/healthcare_chatbot_app.py
+python backend/healthcare_chatbot/app.py
 ```
 
-Then open: `http://localhost:8000`
+Open: `http://localhost:8000`
 
 ## Behavior
-1. User submits a health question from an HTML form.
-2. Python processes the question.
-3. The app searches `healthcare_faqs` in SQLite for a relevant answer.
-4. If nothing matches, it returns:
-   "Please consult a qualified healthcare professional for personalized advice."
+1. User submits a health question using the HTML form.
+2. Python processes the request server-side.
+3. The app checks the SQL-backed `healthcare_faqs` table.
+4. If no match is found, it advises consulting a healthcare professional.
