@@ -1,10 +1,10 @@
-# Healthcare Web App (FastAPI Backend)
+# Healthcare Web App (Python + HTML + SQL)
 
-Ethical healthcare education platform that provides **general health information only**.
+Ethical healthcare education platform built with **FastAPI (Python)**, server-rendered **HTML**, and **SQLite SQL** storage.
 
 ## Safety Principles
 - No diagnosis, prescriptions, or personalized medical treatment plans.
-- Disclaimer included in all API responses.
+- Disclaimer included in all API responses and home page.
 - Safety filter blocks unsafe/self-harm/prescribing style requests.
 - Emergency guidance is included for severe symptoms.
 
@@ -36,46 +36,29 @@ Ethical healthcare education platform that provides **general health information
       config.py
       database.py
     main.py
+  /templates
+    index.html
+  /sql
+    schema.sql
 ```
 
 ## API Endpoints
-- `GET /api/topics` – general health topics.
-- `POST /api/symptoms` – symptom education (non-diagnostic).
+- `GET /api/topics` – general health topics (from SQL table).
+- `POST /api/symptoms` – symptom education (non-diagnostic) and query logging to SQL.
 - `POST /api/safety/check` – content safety check.
 - `GET /api/auth/status` – optional auth placeholder.
+- `GET /` – HTML landing page.
 
 ## Run Locally
 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate  # on Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-## Docker
-
-```bash
-docker compose up --build
-```
-
-- Backend: `http://localhost:8000`
-- Frontend: `http://localhost:3000`
-
-
-## Windows Setup Note (pydantic-core / Rust error)
-
-If you see an install failure mentioning `pydantic-core` and Rust/Cargo on Python 3.14, use one of these options:
-
-1. Use Python **3.11-3.13** for this project (recommended).
-2. Remove strict `--only-binary=all` pinning and let pip resolve compatible wheels.
-
-Example:
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-python -m pip install --upgrade pip
-pip install -r backend/requirements.txt
-```
+## Notes
+- Stack is intentionally limited to **Python, HTML, and SQL** for this version.
+- SQLite database file (`healthcare.db`) is created automatically on startup.

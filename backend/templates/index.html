@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ app_name }}</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.5; }
+      .box { padding: 1rem; border: 1px solid #ddd; border-radius: 8px; max-width: 800px; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>{{ app_name }}</h1>
+      <p><strong>Disclaimer:</strong> {{ disclaimer }}</p>
+      <p>This service provides general health education only.</p>
+      <ul>
+        <li><a href="/api/topics">GET /api/topics</a></li>
+        <li>POST /api/symptoms</li>
+        <li>POST /api/safety/check</li>
+      </ul>
+    </div>
+  </body>
+</html>

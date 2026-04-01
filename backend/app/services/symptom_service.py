@@ -1,9 +1,16 @@
+import json
+
+from app.core.database import get_connection
 from app.schemas.symptom_schema import SymptomResponse
 from app.services.topic_service import DISCLAIMER
 
 
 def build_symptom_education(symptoms: list[str]) -> SymptomResponse:
     normalized = [symptom.strip().lower() for symptom in symptoms if symptom.strip()]
+
+    with get_connection() as conn:
+        conn.execute("INSERT INTO symptom_queries(symptoms) VALUES (?)", (json.dumps(normalized),))
+
     return SymptomResponse(
         symptoms=normalized,
         general_info=(
