@@ -43,10 +43,10 @@ Ethical healthcare education platform built with **FastAPI (Python)**, server-re
 ```
 
 ## API Endpoints
-- `GET /api/topics` – general health topics (from SQL table).
-- `POST /api/symptoms` – symptom education (non-diagnostic) and query logging to SQL.
-- `POST /api/safety/check` – content safety check.
-- `GET /api/auth/status` – optional auth placeholder.
+- `GET /topics` – general health topics (from SQL table).
+- `POST /symptoms` – symptom education (non-diagnostic) and query logging to SQL.
+- `POST /safety/check` – content safety check.
+- `GET /auth/status` – optional auth placeholder.
 - `GET /` – HTML landing page.
 
 ## Run Locally

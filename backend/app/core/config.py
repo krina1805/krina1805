@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "Healthcare Education API"
-    api_prefix: str = "/api"
+    api_prefix: str = ""
     environment: str = "development"
     cors_origins: str = "*"
     rate_limit_per_minute: int = 60
