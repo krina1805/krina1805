@@ -62,3 +62,20 @@ docker compose up --build
 
 - Backend: `http://localhost:8000`
 - Frontend: `http://localhost:3000`
+
+
+## Windows Setup Note (pydantic-core / Rust error)
+
+If you see an install failure mentioning `pydantic-core` and Rust/Cargo on Python 3.14, use one of these options:
+
+1. Use Python **3.11-3.13** for this project (recommended).
+2. Remove strict `--only-binary=all` pinning and let pip resolve compatible wheels.
+
+Example:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r backend/requirements.txt
+```
