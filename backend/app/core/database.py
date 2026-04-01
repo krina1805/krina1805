@@ -14,8 +14,15 @@ def get_connection() -> sqlite3.Connection:
 
 def init_db() -> None:
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
+    statements = [statement.strip() for statement in schema.split(";") if statement.strip()]
+
     with get_connection() as conn:
-        conn.executescript(schema)
+        for statement in statements:
+            try:
+                conn.execute(statement)
+            except sqlite3.OperationalError as exc:
+                if "already exists" not in str(exc).lower():
+                    raise
 
 
 def seed_topics(rows: list[tuple[str, str, str]]) -> None:
