@@ -274,56 +274,56 @@ def generate_chatbot_response(user_input: str) -> str:
 
     if contains_any(greeting_keywords):
         return (
-            "Hi! 👋 I’m your assistant. I can help with pricing, features, support, hours, and contact details. "
-            "What would you like to know first?"
+            "Hi, thanks for reaching out. I can help with pricing, feature details, support options, "
+            "business hours, and contact information. What are you looking for today?"
         )
 
     if contains_any(features_keywords):
         return (
-            "Here’s what I can help with right now:\n"
-            "• Explain pricing tiers (Basic, Pro, Enterprise)\n"
-            "• Share support hours and contact channels\n"
-            "• Guide simple troubleshooting steps\n"
-            "• Save our conversation history for future review"
+            "I can help with a few practical areas right now:\n"
+            "• Compare available plans and expected usage fit\n"
+            "• Share support channels and office hours\n"
+            "• Walk through basic troubleshooting steps\n"
+            "• Keep a server-side history of this conversation"
         )
 
     if contains_any(pricing_keywords):
         return (
-            "Our plans are designed for different needs:\n"
-            "• Basic: great for personal/small projects\n"
-            "• Pro: adds advanced tools and higher limits\n"
-            "• Enterprise: custom setup, security, and dedicated support\n"
-            "If you tell me your use case, I can suggest a best-fit plan."
+            "Most teams choose between three options:\n"
+            "• Starter: for individual or light usage\n"
+            "• Growth: for regular team workflows and higher limits\n"
+            "• Scale: for advanced security and dedicated support\n"
+            "If you share your expected users or volume, I can suggest the best fit."
         )
 
     if contains_any(hours_keywords):
-        return "Support is available Monday to Friday, 9:00 AM–6:00 PM (UTC). For urgent issues, email us and include 'URGENT' in the subject."
+        return "Support is available Monday to Friday, 9:00 AM–6:00 PM (UTC). For urgent issues, email support and include a short impact summary."
 
     if contains_any(contact_keywords):
         return (
-            "You can reach us here:\n"
+            "You can contact the team through:\n"
             "• Email: support@example.com\n"
             "• Phone: +1 (800) 555-0100\n"
-            "• Help Desk: /api/ (for service integrations)"
+            "• API endpoint reference: /api/"
         )
 
     if contains_any(support_keywords):
         return (
-            "I’m sorry you’re running into trouble. Let’s fix it step-by-step:\n"
+            "Sorry you’re running into this. Let’s troubleshoot step by step:\n"
             "1) Tell me what action you were taking\n"
-            "2) Share any error message (exact text helps)\n"
-            "3) Mention when it started and whether it happens every time"
+            "2) Share the exact error message if there is one\n"
+            "3) Confirm whether it happens every time or intermittently"
         )
 
     if contains_any(thanks_keywords):
-        return "You’re welcome! 😊 If you’d like, I can also help with pricing comparisons or troubleshooting next."
+        return "You’re welcome. If you want, I can also help compare plans or continue troubleshooting."
 
     if contains_any(goodbye_keywords):
-        return "Glad I could help. Have a great day! 👋"
+        return "Glad I could help. Reach out anytime."
 
     return (
-        "I can definitely help with that. I’m best at topics like pricing, product features, support troubleshooting, "
-        "business hours, and contact options. Try: 'What are your plans?' or 'How do I contact support?'"
+        "I can help best with pricing, feature details, support troubleshooting, office hours, and contact options. "
+        "Try asking: 'Which plan fits a small team?' or 'How do I report an urgent issue?'"
     )
 
 def get_conversation_history(limit: int = 20):

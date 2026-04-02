@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
+    <title>Assistant</title>
     <style>
         :root {
             --bg: #f7f3ff;
@@ -146,7 +146,7 @@
 <body>
     <div class="chat-wrapper">
         <div class="chat-header">
-            <h1>Chatbot</h1>
+            <h1>Assistant</h1>
             <p class="subtitle">A colorful server-rendered chat experience powered by Python and SQLite history.</p>
             <div class="chip-list">
                 <span class="chip">Features</span>
@@ -171,7 +171,7 @@
                 <div class="history-item">
                     <div class="label">You</div>
                     <p class="bubble-user">{{ item.user_input }}</p>
-                    <div class="label">Chatbot</div>
+                    <div class="label">Assistant</div>
                     <p class="bubble-bot">{{ item.chatbot_response }}</p>
                     <p class="meta">Timestamp (UTC): {{ item.created_at }}</p>
                 </div>
