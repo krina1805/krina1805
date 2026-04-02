@@ -19,10 +19,11 @@ load_dotenv(ROOT_DIR / '.env')
 templates = Jinja2Templates(directory=str(ROOT_DIR / "templates"))
 SQLITE_DB_PATH = ROOT_DIR / "chatbot_history.db"
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB connection (optional for local chatbot-only mode)
+mongo_url = os.environ.get("MONGO_URL")
+db_name = os.environ.get("DB_NAME", "app_db")
+client = AsyncIOMotorClient(mongo_url) if mongo_url else None
+db = client[db_name] if client else None
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -95,6 +96,9 @@ class Appointment(BaseModel):
 
 # Helper function to get chat history
 async def get_chat_messages(session_id: str, agent_type: str):
+    if db is None:
+        return []
+
     collection_map = {
         "healthcare": "healthcare_chats",
         "support": "support_chats",
@@ -108,6 +112,9 @@ async def get_chat_messages(session_id: str, agent_type: str):
 
 # Helper function to save chat message
 async def save_chat_message(session_id: str, agent_type: str, role: str, content: str):
+    if db is None:
+        return
+
     collection_map = {
         "healthcare": "healthcare_chats",
         "support": "support_chats",
@@ -133,6 +140,9 @@ async def root():
 
 @api_router.post("/chat", response_model=ChatResponse)
 async def chat_with_agent(request: ChatRequest):
+    if db is None:
+        raise HTTPException(status_code=503, detail="MongoDB is not configured. Set MONGO_URL and DB_NAME.")
+
     try:
         # Save user message
         await save_chat_message(request.session_id, request.agent_type, "user", request.message)
@@ -182,6 +192,8 @@ async def get_chat_history(session_id: str, agent_type: str):
 
 @api_router.post("/job-application")
 async def submit_job_application(application: JobApplication):
+    if db is None:
+        raise HTTPException(status_code=503, detail="MongoDB is not configured. Set MONGO_URL and DB_NAME.")
     try:
         app_dict = application.model_dump()
         await db.job_applications.insert_one(app_dict)
@@ -192,11 +204,15 @@ async def submit_job_application(application: JobApplication):
 
 @api_router.get("/job-applications")
 async def get_job_applications():
+    if db is None:
+        raise HTTPException(status_code=503, detail="MongoDB is not configured. Set MONGO_URL and DB_NAME.")
     applications = await db.job_applications.find({}, {"_id": 0}).to_list(1000)
     return {"applications": applications}
 
 @api_router.post("/feedback")
 async def submit_feedback(feedback: Feedback):
+    if db is None:
+        raise HTTPException(status_code=503, detail="MongoDB is not configured. Set MONGO_URL and DB_NAME.")
     try:
         feedback_dict = feedback.model_dump()
         await db.feedback.insert_one(feedback_dict)
@@ -207,11 +223,15 @@ async def submit_feedback(feedback: Feedback):
 
 @api_router.get("/feedback")
 async def get_feedback():
+    if db is None:
+        raise HTTPException(status_code=503, detail="MongoDB is not configured. Set MONGO_URL and DB_NAME.")
     feedback_list = await db.feedback.find({}, {"_id": 0}).to_list(1000)
     return {"feedback": feedback_list}
 
 @api_router.post("/appointments")
 async def book_appointment(appointment: Appointment):
+    if db is None:
+        raise HTTPException(status_code=503, detail="MongoDB is not configured. Set MONGO_URL and DB_NAME.")
     try:
         appointment_dict = appointment.model_dump()
         await db.appointments.insert_one(appointment_dict)
@@ -222,6 +242,8 @@ async def book_appointment(appointment: Appointment):
 
 @api_router.get("/appointments")
 async def get_appointments():
+    if db is None:
+        raise HTTPException(status_code=503, detail="MongoDB is not configured. Set MONGO_URL and DB_NAME.")
     appointments = await db.appointments.find({}, {"_id": 0}).to_list(1000)
     return {"appointments": appointments}
 
@@ -242,6 +264,8 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+if db is None:
+    logger.warning("MONGO_URL not set. Mongo-backed endpoints will return 503; /chatbot remains available.")
 
 def init_sqlite_db():
     with sqlite3.connect(SQLITE_DB_PATH) as conn:
@@ -447,4 +471,5 @@ async def chatbot_submit(request: Request, user_input: str = Form(...)):
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    if client is not None:
+        client.close()
