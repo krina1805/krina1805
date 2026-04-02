@@ -258,23 +258,73 @@ def init_sqlite_db():
         conn.commit()
 
 def generate_chatbot_response(user_input: str) -> str:
-    text = user_input.lower()
+    text = user_input.lower().strip()
 
-    keyword_rules = {
-        "hello": "Hello! How can I help you today?",
-        "hi": "Hi there! What would you like to talk about?",
-        "help": "I can answer basic questions. Try asking about pricing, hours, or contact details.",
-        "price": "Our pricing depends on the service tier. Basic, Pro, and Enterprise plans are available.",
-        "hours": "Our support hours are Monday to Friday, 9:00 AM to 6:00 PM.",
-        "contact": "You can contact us at support@example.com.",
-        "bye": "Goodbye! Feel free to come back anytime.",
-    }
+    greeting_keywords = ("hello", "hi", "hey", "good morning", "good afternoon", "good evening")
+    pricing_keywords = ("price", "pricing", "cost", "plan", "subscription")
+    support_keywords = ("help", "support", "issue", "problem", "error", "trouble")
+    hours_keywords = ("hours", "open", "availability", "available", "time")
+    contact_keywords = ("contact", "email", "phone", "call")
+    features_keywords = ("feature", "features", "what can you do", "capabilities")
+    thanks_keywords = ("thanks", "thank you", "appreciate")
+    goodbye_keywords = ("bye", "goodbye", "see you")
 
-    for keyword, response in keyword_rules.items():
-        if keyword in text:
-            return response
+    def contains_any(keywords):
+        return any(keyword in text for keyword in keywords)
 
-    return "I am a simple rule-based chatbot. Could you rephrase your question with keywords like help, price, or contact?"
+    if contains_any(greeting_keywords):
+        return (
+            "Hi! 👋 I’m your assistant. I can help with pricing, features, support, hours, and contact details. "
+            "What would you like to know first?"
+        )
+
+    if contains_any(features_keywords):
+        return (
+            "Here’s what I can help with right now:\n"
+            "• Explain pricing tiers (Basic, Pro, Enterprise)\n"
+            "• Share support hours and contact channels\n"
+            "• Guide simple troubleshooting steps\n"
+            "• Save our conversation history for future review"
+        )
+
+    if contains_any(pricing_keywords):
+        return (
+            "Our plans are designed for different needs:\n"
+            "• Basic: great for personal/small projects\n"
+            "• Pro: adds advanced tools and higher limits\n"
+            "• Enterprise: custom setup, security, and dedicated support\n"
+            "If you tell me your use case, I can suggest a best-fit plan."
+        )
+
+    if contains_any(hours_keywords):
+        return "Support is available Monday to Friday, 9:00 AM–6:00 PM (UTC). For urgent issues, email us and include 'URGENT' in the subject."
+
+    if contains_any(contact_keywords):
+        return (
+            "You can reach us here:\n"
+            "• Email: support@example.com\n"
+            "• Phone: +1 (800) 555-0100\n"
+            "• Help Desk: /api/ (for service integrations)"
+        )
+
+    if contains_any(support_keywords):
+        return (
+            "I’m sorry you’re running into trouble. Let’s fix it step-by-step:\n"
+            "1) Tell me what action you were taking\n"
+            "2) Share any error message (exact text helps)\n"
+            "3) Mention when it started and whether it happens every time"
+        )
+
+    if contains_any(thanks_keywords):
+        return "You’re welcome! 😊 If you’d like, I can also help with pricing comparisons or troubleshooting next."
+
+    if contains_any(goodbye_keywords):
+        return "Glad I could help. Have a great day! 👋"
+
+    return (
+        "I can definitely help with that. I’m best at topics like pricing, product features, support troubleshooting, "
+        "business hours, and contact options. Try: 'What are your plans?' or 'How do I contact support?'"
+    )
 
 def get_conversation_history(limit: int = 20):
     with sqlite3.connect(SQLITE_DB_PATH) as conn:
