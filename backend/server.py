@@ -257,12 +257,16 @@ def init_sqlite_db():
         )
         conn.commit()
 
-def generate_chatbot_response(user_input: str) -> str:
+def generate_chatbot_response(user_input: str, recent_messages: Optional[List[dict]] = None) -> str:
     text = user_input.lower().strip()
+    recent_messages = recent_messages or []
 
     greeting_keywords = ("hello", "hi", "hey", "good morning", "good afternoon", "good evening")
     pricing_keywords = ("price", "pricing", "cost", "plan", "subscription")
     support_keywords = ("help", "support", "issue", "problem", "error", "trouble")
+    escalation_keywords = ("human", "agent", "representative", "person")
+    billing_keywords = ("invoice", "billing", "refund", "charged", "payment")
+    integration_keywords = ("api", "integration", "webhook", "sdk")
     hours_keywords = ("hours", "open", "availability", "available", "time")
     contact_keywords = ("contact", "email", "phone", "call")
     features_keywords = ("feature", "features", "what can you do", "capabilities")
@@ -287,6 +291,14 @@ def generate_chatbot_response(user_input: str) -> str:
             "• Keep a server-side history of this conversation"
         )
 
+    if contains_any(integration_keywords):
+        return (
+            "For integrations, start with these basics:\n"
+            "• API docs and endpoint references under /api/\n"
+            "• Use test credentials in a non-production environment first\n"
+            "• Log request IDs so support can trace issues faster"
+        )
+
     if contains_any(pricing_keywords):
         return (
             "Most teams choose between three options:\n"
@@ -294,6 +306,14 @@ def generate_chatbot_response(user_input: str) -> str:
             "• Growth: for regular team workflows and higher limits\n"
             "• Scale: for advanced security and dedicated support\n"
             "If you share your expected users or volume, I can suggest the best fit."
+        )
+
+    if contains_any(billing_keywords):
+        return (
+            "I can help with billing questions. Please include:\n"
+            "• Invoice ID or billing email\n"
+            "• Charge date and amount\n"
+            "• Whether you need clarification, correction, or refund review"
         )
 
     if contains_any(hours_keywords):
@@ -314,6 +334,24 @@ def generate_chatbot_response(user_input: str) -> str:
             "2) Share the exact error message if there is one\n"
             "3) Confirm whether it happens every time or intermittently"
         )
+
+    if contains_any(escalation_keywords):
+        return (
+            "Absolutely — I can hand this off to a human support specialist. "
+            "Please share your preferred contact method and a short summary of the issue."
+        )
+
+    if "more" in text and recent_messages:
+        last_assistant = next(
+            (message for message in reversed(recent_messages) if message.get("chatbot_response")),
+            None
+        )
+        if last_assistant:
+            return (
+                "Sure — here are additional details based on the last topic:\n"
+                f"{last_assistant.get('chatbot_response')}\n\n"
+                "If you want, I can narrow this down for your specific situation."
+            )
 
     if contains_any(thanks_keywords):
         return "You’re welcome. If you want, I can also help compare plans or continue troubleshooting."
@@ -370,7 +408,8 @@ async def chatbot_page(request: Request):
 
 @app.post("/chatbot", response_class=HTMLResponse)
 async def chatbot_submit(request: Request, user_input: str = Form(...)):
-    chatbot_reply = generate_chatbot_response(user_input)
+    recent_messages = get_conversation_history(limit=5)
+    chatbot_reply = generate_chatbot_response(user_input, recent_messages=recent_messages)
     save_conversation(user_input, chatbot_reply)
 
     return templates.TemplateResponse(
