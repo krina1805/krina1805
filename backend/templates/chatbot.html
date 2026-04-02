@@ -5,82 +5,192 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Python Chatbot</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
-            line-height: 1.5;
-            color: #222;
-            padding: 0 16px;
+        :root {
+            --bg: #f3f7ff;
+            --panel: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --brand: #2563eb;
+            --brand-dark: #1d4ed8;
+            --user-bg: #e0edff;
+            --bot-bg: #f3f4f6;
+            --border: #dbe3f1;
+            --shadow: 0 10px 28px rgba(37, 99, 235, 0.08);
         }
-        h1, h2 {
-            margin-bottom: 0.4rem;
+        body {
+            font-family: Inter, Arial, sans-serif;
+            max-width: 960px;
+            margin: 0 auto;
+            min-height: 100vh;
+            line-height: 1.5;
+            color: var(--text);
+            padding: 24px 16px 40px;
+            background: linear-gradient(160deg, #eef4ff 0%, #f9fbff 60%, #f3f7ff 100%);
+        }
+        .chat-wrapper {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .chat-header {
+            padding: 22px 24px 18px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+        }
+        h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+        }
+        h2 {
+            margin: 0 0 12px;
+            font-size: 20px;
+        }
+        .subtitle {
+            margin: 0 0 10px;
+            color: var(--muted);
+        }
+        .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .chip {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #edf2ff;
+            color: #1e40af;
+            border: 1px solid #d6e4ff;
+            font-size: 13px;
         }
         form {
-            margin: 24px 0;
+            margin: 0;
             display: flex;
             gap: 12px;
+            padding: 18px 24px 24px;
+            border-top: 1px solid var(--border);
+            background: #fcfdff;
         }
         input[type="text"] {
             flex: 1;
-            padding: 10px;
+            padding: 12px 14px;
             font-size: 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
         }
         button {
-            padding: 10px 18px;
+            padding: 12px 18px;
             border: none;
-            background: #2563eb;
+            background: var(--brand);
             color: #fff;
-            border-radius: 4px;
+            border-radius: 10px;
             cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: var(--brand-dark);
+        }
+        .chat-body {
+            padding: 20px 24px;
+            max-height: 520px;
+            overflow-y: auto;
+            background: #fbfdff;
         }
         .reply-box, .history-item {
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
             padding: 12px;
             margin-bottom: 10px;
             background: #f9fafb;
         }
+        .history-item {
+            margin-bottom: 14px;
+        }
+        .bubble-user, .bubble-bot {
+            margin: 0 0 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
+        }
+        .bubble-user {
+            background: var(--user-bg);
+            border: 1px solid #c8ddff;
+        }
+        .bubble-bot {
+            background: var(--bot-bg);
+            border: 1px solid #e5e7eb;
+        }
+        .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #4b5563;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
         .meta {
             font-size: 12px;
-            color: #6b7280;
+            color: var(--muted);
+        }
+        .empty-state {
+            color: var(--muted);
+            text-align: center;
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 18px 12px;
+            background: #fff;
         }
     </style>
 </head>
 <body>
-    <h1>Simple Chatbot (No JavaScript)</h1>
-    <p>Submit your message using the HTML form. The Python backend processes it and stores each exchange in SQL.</p>
-    <p><strong>Try asking:</strong> “What features do you offer?”, “How much does it cost?”, or “I need support help”.</p>
-
-    <form method="post" action="/chatbot">
-        <input
-            type="text"
-            name="user_input"
-            placeholder="Type your message"
-            required
-            value="{{ last_user_input }}"
-        />
-        <button type="submit">Send</button>
-    </form>
-
-    {% if chatbot_reply %}
-    <div class="reply-box">
-        <strong>Chatbot Reply:</strong>
-        <p>{{ chatbot_reply }}</p>
-    </div>
-    {% endif %}
-
-    <h2>Conversation History</h2>
-    {% if conversation_history %}
-        {% for item in conversation_history %}
-        <div class="history-item">
-            <p><strong>You:</strong> {{ item.user_input }}</p>
-            <p><strong>Bot:</strong> {{ item.chatbot_response }}</p>
-            <p class="meta">Timestamp (UTC): {{ item.created_at }}</p>
+    <div class="chat-wrapper">
+        <div class="chat-header">
+            <h1>Simple Chatbot (No JavaScript)</h1>
+            <p class="subtitle">Server-rendered chat experience powered by Python and SQLite conversation history.</p>
+            <div class="chip-list">
+                <span class="chip">Features</span>
+                <span class="chip">Pricing</span>
+                <span class="chip">Support</span>
+                <span class="chip">Business Hours</span>
+                <span class="chip">Contact</span>
+            </div>
         </div>
-        {% endfor %}
-    {% else %}
-        <p>No conversations yet.</p>
-    {% endif %}
+
+        <div class="chat-body">
+            {% if chatbot_reply %}
+            <div class="reply-box">
+                <div class="label">Latest Reply</div>
+                <p>{{ chatbot_reply }}</p>
+            </div>
+            {% endif %}
+
+            <h2>Conversation History</h2>
+            {% if conversation_history %}
+                {% for item in conversation_history %}
+                <div class="history-item">
+                    <div class="label">You</div>
+                    <p class="bubble-user">{{ item.user_input }}</p>
+                    <div class="label">Chatbot</div>
+                    <p class="bubble-bot">{{ item.chatbot_response }}</p>
+                    <p class="meta">Timestamp (UTC): {{ item.created_at }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty-state">No conversations yet. Start with: “What features do you offer?”</p>
+            {% endif %}
+        </div>
+
+        <form method="post" action="/chatbot">
+            <input
+                type="text"
+                name="user_input"
+                aria-label="Type your message"
+                placeholder="Type your message (e.g., I need support help)"
+                required
+                value="{{ last_user_input }}"
+            />
+            <button type="submit">Send</button>
+        </form>
+    </div>
 </body>
 </html>
