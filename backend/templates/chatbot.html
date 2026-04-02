@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Python Chatbot</title>
+    <title>Chatbot</title>
     <style>
         :root {
-            --bg: #f3f7ff;
+            --bg: #f7f3ff;
             --panel: #ffffff;
             --text: #1f2937;
             --muted: #6b7280;
-            --brand: #2563eb;
-            --brand-dark: #1d4ed8;
-            --user-bg: #e0edff;
-            --bot-bg: #f3f4f6;
-            --border: #dbe3f1;
-            --shadow: 0 10px 28px rgba(37, 99, 235, 0.08);
+            --brand: #7c3aed;
+            --brand-dark: #6d28d9;
+            --user-bg: #ede9fe;
+            --bot-bg: #ecfeff;
+            --border: #e3d8ff;
+            --shadow: 0 12px 30px rgba(124, 58, 237, 0.14);
         }
         body {
             font-family: Inter, Arial, sans-serif;
@@ -25,7 +25,7 @@
             line-height: 1.5;
             color: var(--text);
             padding: 24px 16px 40px;
-            background: linear-gradient(160deg, #eef4ff 0%, #f9fbff 60%, #f3f7ff 100%);
+            background: linear-gradient(160deg, #f2ebff 0%, #ffeefd 45%, #e9fbff 100%);
         }
         .chat-wrapper {
             background: var(--panel);
@@ -37,7 +37,7 @@
         .chat-header {
             padding: 22px 24px 18px;
             border-bottom: 1px solid var(--border);
-            background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+            background: linear-gradient(90deg, #faf5ff 0%, #f0f9ff 100%);
         }
         h1 {
             margin: 0 0 6px;
@@ -59,10 +59,11 @@
         .chip {
             padding: 6px 10px;
             border-radius: 999px;
-            background: #edf2ff;
-            color: #1e40af;
-            border: 1px solid #d6e4ff;
+            background: linear-gradient(90deg, #ede9fe, #dbeafe);
+            color: #5b21b6;
+            border: 1px solid #ddd6fe;
             font-size: 13px;
+            font-weight: 600;
         }
         form {
             margin: 0;
@@ -70,7 +71,7 @@
             gap: 12px;
             padding: 18px 24px 24px;
             border-top: 1px solid var(--border);
-            background: #fcfdff;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f5ff 100%);
         }
         input[type="text"] {
             flex: 1;
@@ -95,14 +96,14 @@
             padding: 20px 24px;
             max-height: 520px;
             overflow-y: auto;
-            background: #fbfdff;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f5ff 100%);
         }
         .reply-box, .history-item {
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 12px;
             margin-bottom: 10px;
-            background: #f9fafb;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
         }
         .history-item {
             margin-bottom: 14px;
@@ -114,11 +115,11 @@
         }
         .bubble-user {
             background: var(--user-bg);
-            border: 1px solid #c8ddff;
+            border: 1px solid #ddd6fe;
         }
         .bubble-bot {
             background: var(--bot-bg);
-            border: 1px solid #e5e7eb;
+            border: 1px solid #bae6fd;
         }
         .label {
             font-size: 12px;
@@ -145,8 +146,8 @@
 <body>
     <div class="chat-wrapper">
         <div class="chat-header">
-            <h1>Simple Chatbot (No JavaScript)</h1>
-            <p class="subtitle">Server-rendered chat experience powered by Python and SQLite conversation history.</p>
+            <h1>Chatbot</h1>
+            <p class="subtitle">A colorful server-rendered chat experience powered by Python and SQLite history.</p>
             <div class="chip-list">
                 <span class="chip">Features</span>
                 <span class="chip">Pricing</span>
