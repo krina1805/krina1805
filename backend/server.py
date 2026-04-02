@@ -379,6 +379,29 @@ def get_conversation_history(limit: int = 20):
 
     return [dict(row) for row in reversed(rows)]
 
+def get_conversation_history_for_display(limit: int = 20):
+    history = get_conversation_history(limit=limit)
+    formatted_history = []
+
+    for item in history:
+        timestamp = item.get("created_at", "")
+        display_time = timestamp
+        try:
+            parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            display_time = parsed.astimezone(timezone.utc).strftime("%b %d, %Y %H:%M UTC")
+        except Exception:
+            pass
+
+        formatted_history.append(
+            {
+                "user_input": item.get("user_input", ""),
+                "chatbot_response": item.get("chatbot_response", ""),
+                "created_at_display": display_time,
+            }
+        )
+
+    return formatted_history
+
 def save_conversation(user_input: str, chatbot_response: str):
     with sqlite3.connect(SQLITE_DB_PATH) as conn:
         conn.execute(
@@ -401,7 +424,7 @@ async def chatbot_page(request: Request):
         {
             "request": request,
             "chatbot_reply": None,
-            "conversation_history": get_conversation_history(),
+            "conversation_history": get_conversation_history_for_display(),
             "last_user_input": "",
         },
     )
@@ -417,7 +440,7 @@ async def chatbot_submit(request: Request, user_input: str = Form(...)):
         {
             "request": request,
             "chatbot_reply": chatbot_reply,
-            "conversation_history": get_conversation_history(),
+            "conversation_history": get_conversation_history_for_display(),
             "last_user_input": user_input,
         },
     )

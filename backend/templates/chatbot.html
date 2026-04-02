@@ -34,6 +34,32 @@
             box-shadow: var(--shadow);
             overflow: hidden;
         }
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .quick-actions form {
+            padding: 0;
+            border: none;
+            background: transparent;
+            display: block;
+        }
+        .quick-actions button {
+            width: 100%;
+            text-align: left;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd6fe;
+            background: #f8f4ff;
+            color: #4c1d95;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .quick-actions button:hover {
+            background: #efe7ff;
+        }
         .chat-header {
             padding: 22px 24px 18px;
             border-bottom: 1px solid var(--border);
@@ -167,6 +193,12 @@
                 <span class="chip">Integrations</span>
             </div>
             <div class="notice">Tip: Avoid sharing passwords, OTPs, or full card numbers in chat.</div>
+            <div class="quick-actions">
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="Which plan fits a small team?">Which plan fits a small team?</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="How do I contact support?">How do I contact support?</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="I need help with billing">I need help with billing</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="How do I integrate with your API?">How do I integrate with your API?</button></form>
+            </div>
         </div>
 
         <div class="chat-body">
@@ -185,7 +217,7 @@
                     <p class="bubble-user">{{ item.user_input }}</p>
                     <div class="label">Assistant</div>
                     <p class="bubble-bot">{{ item.chatbot_response }}</p>
-                    <p class="meta">Timestamp (UTC): {{ item.created_at }}</p>
+                    <p class="meta">Timestamp: {{ item.created_at_display }}</p>
                 </div>
                 {% endfor %}
             {% else %}
@@ -200,6 +232,7 @@
                 aria-label="Type your message"
                 placeholder="Type your message (e.g., I need support help)"
                 required
+                autofocus
                 value="{{ last_user_input }}"
             />
             <button type="submit">Send</button>
