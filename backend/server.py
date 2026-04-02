@@ -1,10 +1,13 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Form, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
+import sqlite3
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
@@ -13,6 +16,8 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+templates = Jinja2Templates(directory=str(ROOT_DIR / "templates"))
+SQLITE_DB_PATH = ROOT_DIR / "chatbot_history.db"
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -237,6 +242,96 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+def init_sqlite_db():
+    with sqlite3.connect(SQLITE_DB_PATH) as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS chatbot_conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_input TEXT NOT NULL,
+                chatbot_response TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.commit()
+
+def generate_chatbot_response(user_input: str) -> str:
+    text = user_input.lower()
+
+    keyword_rules = {
+        "hello": "Hello! How can I help you today?",
+        "hi": "Hi there! What would you like to talk about?",
+        "help": "I can answer basic questions. Try asking about pricing, hours, or contact details.",
+        "price": "Our pricing depends on the service tier. Basic, Pro, and Enterprise plans are available.",
+        "hours": "Our support hours are Monday to Friday, 9:00 AM to 6:00 PM.",
+        "contact": "You can contact us at support@example.com.",
+        "bye": "Goodbye! Feel free to come back anytime.",
+    }
+
+    for keyword, response in keyword_rules.items():
+        if keyword in text:
+            return response
+
+    return "I am a simple rule-based chatbot. Could you rephrase your question with keywords like help, price, or contact?"
+
+def get_conversation_history(limit: int = 20):
+    with sqlite3.connect(SQLITE_DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """
+            SELECT user_input, chatbot_response, created_at
+            FROM chatbot_conversations
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+    return [dict(row) for row in reversed(rows)]
+
+def save_conversation(user_input: str, chatbot_response: str):
+    with sqlite3.connect(SQLITE_DB_PATH) as conn:
+        conn.execute(
+            """
+            INSERT INTO chatbot_conversations (user_input, chatbot_response, created_at)
+            VALUES (?, ?, ?)
+            """,
+            (user_input, chatbot_response, datetime.now(timezone.utc).isoformat()),
+        )
+        conn.commit()
+
+@app.on_event("startup")
+async def startup_event():
+    init_sqlite_db()
+
+@app.get("/chatbot", response_class=HTMLResponse)
+async def chatbot_page(request: Request):
+    return templates.TemplateResponse(
+        "chatbot.html",
+        {
+            "request": request,
+            "chatbot_reply": None,
+            "conversation_history": get_conversation_history(),
+            "last_user_input": "",
+        },
+    )
+
+@app.post("/chatbot", response_class=HTMLResponse)
+async def chatbot_submit(request: Request, user_input: str = Form(...)):
+    chatbot_reply = generate_chatbot_response(user_input)
+    save_conversation(user_input, chatbot_reply)
+
+    return templates.TemplateResponse(
+        "chatbot.html",
+        {
+            "request": request,
+            "chatbot_reply": chatbot_reply,
+            "conversation_history": get_conversation_history(),
+            "last_user_input": user_input,
+        },
+    )
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
