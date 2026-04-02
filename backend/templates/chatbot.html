@@ -6,16 +6,16 @@
     <title>Assistant</title>
     <style>
         :root {
-            --bg: #f7f3ff;
+            --bg: #eef2ff;
             --panel: #ffffff;
-            --text: #1f2937;
+            --text: #111827;
             --muted: #6b7280;
-            --brand: #7c3aed;
-            --brand-dark: #6d28d9;
-            --user-bg: #ede9fe;
-            --bot-bg: #ecfeff;
-            --border: #e3d8ff;
-            --shadow: 0 12px 30px rgba(124, 58, 237, 0.14);
+            --brand: #ec4899;
+            --brand-dark: #db2777;
+            --user-bg: #f5d0fe;
+            --bot-bg: #bfdbfe;
+            --border: #ddd6fe;
+            --shadow: 0 16px 38px rgba(168, 85, 247, 0.22);
         }
         body {
             font-family: Inter, Arial, sans-serif;
@@ -25,12 +25,14 @@
             line-height: 1.5;
             color: var(--text);
             padding: 24px 16px 40px;
-            background: linear-gradient(160deg, #f2ebff 0%, #ffeefd 45%, #e9fbff 100%);
+            background: radial-gradient(circle at 10% 10%, #fbcfe8 0%, #eef2ff 32%),
+                        radial-gradient(circle at 90% 20%, #bfdbfe 0%, #eef2ff 28%),
+                        radial-gradient(circle at 50% 90%, #ddd6fe 0%, #eef2ff 30%);
         }
         .chat-wrapper {
             background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 16px;
+            border: 1px solid #e9d5ff;
+            border-radius: 18px;
             box-shadow: var(--shadow);
             overflow: hidden;
         }
@@ -51,19 +53,20 @@
             text-align: left;
             padding: 10px 12px;
             border-radius: 10px;
-            border: 1px solid #ddd6fe;
-            background: #f8f4ff;
-            color: #4c1d95;
+            border: 1px solid #f5d0fe;
+            background: linear-gradient(90deg, #fdf2f8 0%, #eef2ff 100%);
+            color: #831843;
             font-size: 13px;
             font-weight: 600;
+            box-shadow: 0 3px 10px rgba(236, 72, 153, 0.08);
         }
         .quick-actions button:hover {
-            background: #efe7ff;
+            background: linear-gradient(90deg, #fce7f3 0%, #e0e7ff 100%);
         }
         .chat-header {
             padding: 22px 24px 18px;
-            border-bottom: 1px solid var(--border);
-            background: linear-gradient(90deg, #faf5ff 0%, #f0f9ff 100%);
+            border-bottom: 1px solid #f5d0fe;
+            background: linear-gradient(110deg, #fdf2f8 0%, #eef2ff 50%, #e0f2fe 100%);
         }
         h1 {
             margin: 0 0 6px;
@@ -86,7 +89,7 @@
             margin-top: 12px;
             padding: 10px 12px;
             border-radius: 10px;
-            background: #fff7ed;
+            background: linear-gradient(90deg, #fff7ed, #fef3c7);
             border: 1px solid #fed7aa;
             color: #9a3412;
             font-size: 13px;
@@ -94,9 +97,9 @@
         .chip {
             padding: 6px 10px;
             border-radius: 999px;
-            background: linear-gradient(90deg, #ede9fe, #dbeafe);
-            color: #5b21b6;
-            border: 1px solid #ddd6fe;
+            background: linear-gradient(90deg, #fbcfe8, #ddd6fe);
+            color: #7e22ce;
+            border: 1px solid #f5d0fe;
             font-size: 13px;
             font-weight: 600;
         }
@@ -105,40 +108,42 @@
             display: flex;
             gap: 12px;
             padding: 18px 24px 24px;
-            border-top: 1px solid var(--border);
-            background: linear-gradient(180deg, #ffffff 0%, #f8f5ff 100%);
+            border-top: 1px solid #f5d0fe;
+            background: linear-gradient(180deg, #ffffff 0%, #fdf2f8 100%);
         }
         input[type="text"] {
             flex: 1;
             padding: 12px 14px;
             font-size: 16px;
             border-radius: 10px;
-            border: 1px solid var(--border);
+            border: 1px solid #e9d5ff;
+            background: #fff;
         }
         button {
             padding: 12px 18px;
             border: none;
-            background: var(--brand);
+            background: linear-gradient(90deg, #ec4899, #a855f7);
             color: #fff;
             border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
+            box-shadow: 0 8px 18px rgba(236, 72, 153, 0.28);
         }
         button:hover {
-            background: var(--brand-dark);
+            background: linear-gradient(90deg, #db2777, #9333ea);
         }
         .chat-body {
             padding: 20px 24px;
             max-height: 520px;
             overflow-y: auto;
-            background: linear-gradient(180deg, #ffffff 0%, #f8f5ff 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #fdf2f8 100%);
         }
         .reply-box, .history-item {
-            border: 1px solid var(--border);
+            border: 1px solid #e9d5ff;
             border-radius: 12px;
             padding: 12px;
             margin-bottom: 10px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%);
         }
         .history-item {
             margin-bottom: 14px;
@@ -149,12 +154,12 @@
             border-radius: 10px;
         }
         .bubble-user {
-            background: var(--user-bg);
-            border: 1px solid #ddd6fe;
+            background: linear-gradient(90deg, #fce7f3, #f5d0fe);
+            border: 1px solid #f5b4e6;
         }
         .bubble-bot {
-            background: var(--bot-bg);
-            border: 1px solid #bae6fd;
+            background: linear-gradient(90deg, #dbeafe, #bfdbfe);
+            border: 1px solid #93c5fd;
         }
         .label {
             font-size: 12px;
