@@ -5,19 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if mode == "signup" %}Sign Up{% else %}Login{% endif %}</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
-        .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; }
-        .field { margin-bottom: 10px; }
-        label { display: block; margin-bottom: 4px; font-size: 14px; }
-        input { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
-        button { width: 100%; padding: 11px; border: 0; border-radius: 8px; color: white; background: #7c3aed; cursor: pointer; margin-top: 8px; }
-        .error { background: #fee2e2; color: #991b1b; border-radius: 8px; padding: 8px; margin-bottom: 10px; }
-        .links { margin-top: 12px; font-size: 14px; }
+        body {
+            font-family: Inter, Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(circle at 5% 5%, #fce7f3, #eef2ff 35%),
+                        radial-gradient(circle at 95% 95%, #dbeafe, #eef2ff 35%);
+            padding: 16px;
+        }
+        .card {
+            width: min(520px, 95vw);
+            border: 1px solid #ddd6fe;
+            border-radius: 18px;
+            padding: 24px;
+            background: #fff;
+            box-shadow: 0 18px 42px rgba(124, 58, 237, 0.14);
+        }
+        .title { margin: 0 0 4px; font-size: 28px; }
+        .subtitle { margin: 0 0 16px; color: #64748b; }
+        .field { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; color: #334155; }
+        input { width: 100%; box-sizing: border-box; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; }
+        button { width: 100%; padding: 11px; border: 0; border-radius: 10px; color: white; background: linear-gradient(90deg, #7c3aed, #ec4899); cursor: pointer; margin-top: 8px; font-weight: 700; }
+        .error { background: #fee2e2; color: #991b1b; border-radius: 10px; padding: 9px; margin-bottom: 12px; border: 1px solid #fecaca; }
+        .links { margin-top: 12px; font-size: 14px; color: #334155; }
+        .links a { color: #6d28d9; text-decoration: none; font-weight: 700; }
+        .social { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .social a { flex: 1; text-align: center; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px; text-decoration: none; color: #334155; font-weight: 600; background: #f8fafc; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>{% if mode == "signup" %}Create account{% else %}Login{% endif %}</h1>
+        <h1 class="title">{% if mode == "signup" %}🔐 Create Account{% else %}👋 Welcome Back{% endif %}</h1>
+        <p class="subtitle">Smart Privacy-First Chatbot</p>
         {% if error %}<div class="error">{{ error }}</div>{% endif %}
 
         {% if mode == "signup" %}
@@ -37,7 +59,10 @@
             <button type="submit">Login</button>
         </form>
         <div class="links">No account? <a href="/signup">Sign up</a></div>
-        <div class="links">Social login: <a href="/login/social/google">Google</a> · <a href="/login/social/microsoft">Microsoft</a></div>
+        <div class="social">
+            <a href="/login/social/google">🟢 Google</a>
+            <a href="/login/social/microsoft">🔵 Microsoft</a>
+        </div>
         {% endif %}
     </div>
 </body>

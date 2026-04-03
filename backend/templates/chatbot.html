@@ -35,6 +35,7 @@
             border-radius: 18px;
             box-shadow: var(--shadow);
             overflow: hidden;
+            margin-top: 20px;
         }
         .quick-actions {
             display: grid;
@@ -92,11 +93,6 @@
             margin: 0 0 10px;
             color: var(--muted);
         }
-        .chip-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
         .notice {
             margin-top: 12px;
             padding: 10px 12px;
@@ -105,15 +101,6 @@
             border: 1px solid #fed7aa;
             color: #9a3412;
             font-size: 13px;
-        }
-        .chip {
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, #fbcfe8, #ddd6fe);
-            color: #7e22ce;
-            border: 1px solid #f5d0fe;
-            font-size: 13px;
-            font-weight: 600;
         }
         form {
             margin: 0;
@@ -199,38 +186,29 @@
     <div class="chat-wrapper">
         <div class="chat-header">
             <div class="header-top">
-                <h1>Assistant</h1>
+                <h1>💬 Smart Privacy-First Chatbot</h1>
                 <div class="top-links">
-                    <span>{{ user.name }}</span>
-                    <a href="/settings">Settings</a>
-                    <a href="/logout">Logout</a>
+                    <span>👤 {{ user.name }}</span>
+                    <a href="/settings">⚙️ Settings</a>
+                    <a href="/logout">🚪 Logout</a>
                 </div>
             </div>
-            <p class="subtitle">A colorful server-rendered chat experience powered by Python and SQLite history.</p>
+            <p class="subtitle">Clean, secure, and fast chatbot experience.</p>
             {% if highlights %}
             <div class="notice">
-                <strong>Today’s Highlights</strong><br>
-                Time: {{ highlights.current_time }} ({{ highlights.timezone }})<br>
-                Weather: {{ highlights.weather }}<br>
-                {{ highlights.today_highlight }}<br>
-                Genius Insight: {{ highlights.genius_insight }}
+                <strong>✨ Today’s Highlights</strong><br>
+                🕒 {{ highlights.current_time }} ({{ highlights.timezone }})<br>
+                🌤️ Weather: {{ highlights.weather }}<br>
+                📰 {{ highlights.today_highlight }}<br>
+                💡 Genius Insight: {{ highlights.genius_insight }}
             </div>
             {% endif %}
-            <div class="chip-list">
-                <span class="chip">Features</span>
-                <span class="chip">Pricing</span>
-                <span class="chip">Support</span>
-                <span class="chip">Business Hours</span>
-                <span class="chip">Contact</span>
-                <span class="chip">Billing</span>
-                <span class="chip">Integrations</span>
-            </div>
-            <div class="notice">Tip: Avoid sharing passwords, OTPs, or full card numbers in chat. Data sharing outside this system is disabled by policy.</div>
+            <div class="notice">🔒 Privacy policy: Your data is not shared outside this system. You control storage from settings.</div>
             <div class="quick-actions">
-                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="Which plan fits a small team?">Which plan fits a small team?</button></form>
-                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="How do I contact support?">How do I contact support?</button></form>
-                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="I need help with billing">I need help with billing</button></form>
-                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="How do I integrate with your API?">How do I integrate with your API?</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="Give me study tips for today">📘 Study tips for today</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="Suggest productivity hacks">⚡ Productivity hacks</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="What is today's weather and top news?">🌍 Weather + top news</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="Give me a genius insight">🧠 Daily genius insight</button></form>
             </div>
         </div>
 
@@ -254,7 +232,7 @@
                 </div>
                 {% endfor %}
             {% else %}
-                <p class="empty-state">No conversations yet. Start with: “What features do you offer?”</p>
+                <p class="empty-state">No conversations yet. Start with: “Give me study tips for today”.</p>
             {% endif %}
         </div>
 
