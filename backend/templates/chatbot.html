@@ -68,6 +68,22 @@
             border-bottom: 1px solid #f5d0fe;
             background: linear-gradient(110deg, #fdf2f8 0%, #eef2ff 50%, #e0f2fe 100%);
         }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .auth-links {
+            display: flex;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .auth-links a {
+            text-decoration: none;
+            color: #6d28d9;
+            font-weight: 700;
+        }
         h1 {
             margin: 0 0 6px;
             font-size: 28px;
@@ -186,7 +202,18 @@
 <body>
     <div class="chat-wrapper">
         <div class="chat-header">
-            <h1>Assistant</h1>
+            <div class="header-top">
+                <h1>Assistant</h1>
+                <div class="auth-links">
+                    {% if current_user %}
+                    <span>Hi, {{ current_user.name }}</span>
+                    <a href="/logout">Logout</a>
+                    {% else %}
+                    <a href="/login">Login</a>
+                    <a href="/signup">Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
             <p class="subtitle">A colorful server-rendered chat experience powered by Python and SQLite history.</p>
             <div class="chip-list">
                 <span class="chip">Features</span>

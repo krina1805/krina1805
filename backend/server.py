@@ -1,13 +1,18 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Form, Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
 import sqlite3
+import hashlib
+import hmac
+import secrets
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
@@ -257,6 +262,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SESSION_SECRET", "dev-session-secret"))
 
 # Configure logging
 logging.basicConfig(
@@ -278,6 +284,50 @@ def init_sqlite_db():
                 created_at TEXT NOT NULL
             )
             """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS chatbot_users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.commit()
+
+def hash_password(password: str, salt: Optional[str] = None) -> str:
+    salt = salt or secrets.token_hex(16)
+    hashed = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 200000).hex()
+    return f"{salt}${hashed}"
+
+def verify_password(password: str, password_hash: str) -> bool:
+    try:
+        salt, stored_hash = password_hash.split("$", 1)
+    except ValueError:
+        return False
+    recalculated = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 200000).hex()
+    return hmac.compare_digest(stored_hash, recalculated)
+
+def get_user_by_email(email: str):
+    with sqlite3.connect(SQLITE_DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        user = conn.execute(
+            "SELECT id, name, email, password_hash, created_at FROM chatbot_users WHERE email = ?",
+            (email.lower().strip(),),
+        ).fetchone()
+    return dict(user) if user else None
+
+def create_user(name: str, email: str, password: str):
+    with sqlite3.connect(SQLITE_DB_PATH) as conn:
+        conn.execute(
+            """
+            INSERT INTO chatbot_users (name, email, password_hash, created_at)
+            VALUES (?, ?, ?, ?)
+            """,
+            (name.strip(), email.lower().strip(), hash_password(password), datetime.now(timezone.utc).isoformat()),
         )
         conn.commit()
 
@@ -443,6 +493,7 @@ async def startup_event():
 
 @app.get("/chatbot", response_class=HTMLResponse)
 async def chatbot_page(request: Request):
+    current_user = request.session.get("user")
     return templates.TemplateResponse(
         "chatbot.html",
         {
@@ -450,11 +501,13 @@ async def chatbot_page(request: Request):
             "chatbot_reply": None,
             "conversation_history": get_conversation_history_for_display(),
             "last_user_input": "",
+            "current_user": current_user,
         },
     )
 
 @app.post("/chatbot", response_class=HTMLResponse)
 async def chatbot_submit(request: Request, user_input: str = Form(...)):
+    current_user = request.session.get("user")
     recent_messages = get_conversation_history(limit=5)
     chatbot_reply = generate_chatbot_response(user_input, recent_messages=recent_messages)
     save_conversation(user_input, chatbot_reply)
@@ -466,8 +519,83 @@ async def chatbot_submit(request: Request, user_input: str = Form(...)):
             "chatbot_reply": chatbot_reply,
             "conversation_history": get_conversation_history_for_display(),
             "last_user_input": user_input,
+            "current_user": current_user,
         },
     )
+
+@app.get("/signup", response_class=HTMLResponse)
+async def signup_page(request: Request):
+    return templates.TemplateResponse(
+        "auth.html",
+        {"request": request, "mode": "signup", "error": None, "success": None},
+    )
+
+@app.post("/signup", response_class=HTMLResponse)
+async def signup_submit(
+    request: Request,
+    name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+):
+    if password != confirm_password:
+        return templates.TemplateResponse(
+            "auth.html",
+            {"request": request, "mode": "signup", "error": "Passwords do not match.", "success": None},
+            status_code=400,
+        )
+    if len(password) < 8:
+        return templates.TemplateResponse(
+            "auth.html",
+            {"request": request, "mode": "signup", "error": "Password must be at least 8 characters.", "success": None},
+            status_code=400,
+        )
+    if get_user_by_email(email):
+        return templates.TemplateResponse(
+            "auth.html",
+            {"request": request, "mode": "signup", "error": "An account with this email already exists.", "success": None},
+            status_code=400,
+        )
+
+    create_user(name=name, email=email, password=password)
+    return templates.TemplateResponse(
+        "auth.html",
+        {
+            "request": request,
+            "mode": "login",
+            "error": None,
+            "success": "Account created successfully. Please log in.",
+        },
+    )
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse(
+        "auth.html",
+        {"request": request, "mode": "login", "error": None, "success": None},
+    )
+
+@app.post("/login", response_class=HTMLResponse)
+async def login_submit(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+):
+    user = get_user_by_email(email)
+    if not user or not verify_password(password, user["password_hash"]):
+        return templates.TemplateResponse(
+            "auth.html",
+            {"request": request, "mode": "login", "error": "Invalid email or password.", "success": None},
+            status_code=401,
+        )
+
+    request.session["user"] = {"id": user["id"], "name": user["name"], "email": user["email"]}
+    return RedirectResponse(url="/chatbot", status_code=303)
+
+@app.get("/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=303)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
