@@ -323,6 +323,39 @@ def init_sqlite_db():
         conn.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_chatbot_users_username ON chatbot_users(username)"
         )
+
+        # Compatibility table/migration for apps using SQLAlchemy model named `user`.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                email TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                timezone TEXT NOT NULL DEFAULT 'UTC',
+                privacy INTEGER NOT NULL DEFAULT 1,
+                streak_count INTEGER NOT NULL DEFAULT 0,
+                last_login_date TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        existing_user_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(user)").fetchall()
+        }
+        for alter in [
+            "ALTER TABLE user ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC'",
+            "ALTER TABLE user ADD COLUMN privacy INTEGER NOT NULL DEFAULT 1",
+            "ALTER TABLE user ADD COLUMN streak_count INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE user ADD COLUMN last_login_date TEXT",
+            "ALTER TABLE user ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
+        ]:
+            column_name = alter.split("ADD COLUMN", 1)[1].strip().split()[0]
+            if column_name not in existing_user_columns:
+                try:
+                    conn.execute(alter)
+                except sqlite3.OperationalError:
+                    pass
         conn.commit()
 
 def hash_password(password: str, salt: Optional[str] = None) -> str:
