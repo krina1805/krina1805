@@ -1,10 +1,8 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Form, Request
 from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -262,7 +260,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SESSION_SECRET", "dev-session-secret"))
 
 # Configure logging
 logging.basicConfig(
@@ -493,9 +490,6 @@ async def startup_event():
 
 @app.get("/chatbot", response_class=HTMLResponse)
 async def chatbot_page(request: Request):
-    current_user = request.session.get("user")
-    auth_mode = request.query_params.get("auth", "login")
-    show_auth_modal = current_user is None
     return templates.TemplateResponse(
         "chatbot.html",
         {
@@ -503,31 +497,11 @@ async def chatbot_page(request: Request):
             "chatbot_reply": None,
             "conversation_history": get_conversation_history_for_display(),
             "last_user_input": "",
-            "current_user": current_user,
-            "show_auth_modal": show_auth_modal,
-            "auth_mode": "signup" if auth_mode == "signup" else "login",
-            "auth_error": None,
         },
     )
 
 @app.post("/chatbot", response_class=HTMLResponse)
 async def chatbot_submit(request: Request, user_input: str = Form(...)):
-    current_user = request.session.get("user")
-    if not current_user:
-        return templates.TemplateResponse(
-            "chatbot.html",
-            {
-                "request": request,
-                "chatbot_reply": None,
-                "conversation_history": get_conversation_history_for_display(),
-                "last_user_input": "",
-                "current_user": None,
-                "show_auth_modal": True,
-                "auth_mode": "login",
-                "auth_error": "Please log in or sign up to send messages.",
-            },
-            status_code=401,
-        )
     recent_messages = get_conversation_history(limit=5)
     chatbot_reply = generate_chatbot_response(user_input, recent_messages=recent_messages)
     save_conversation(user_input, chatbot_reply)
@@ -539,152 +513,8 @@ async def chatbot_submit(request: Request, user_input: str = Form(...)):
             "chatbot_reply": chatbot_reply,
             "conversation_history": get_conversation_history_for_display(),
             "last_user_input": user_input,
-            "current_user": current_user,
-            "show_auth_modal": False,
-            "auth_mode": "login",
-            "auth_error": None,
         },
     )
-
-@app.get("/signup", response_class=HTMLResponse)
-async def signup_page(request: Request):
-    return templates.TemplateResponse(
-        "auth.html",
-        {"request": request, "mode": "signup", "error": None, "success": None},
-    )
-
-@app.post("/signup", response_class=HTMLResponse)
-async def signup_submit(
-    request: Request,
-    name: str = Form(...),
-    email: str = Form(...),
-    password: str = Form(...),
-    confirm_password: str = Form(...),
-    next_url: str = Form("/login"),
-):
-    if password != confirm_password:
-        if next_url == "/chatbot":
-            return templates.TemplateResponse(
-                "chatbot.html",
-                {
-                    "request": request,
-                    "chatbot_reply": None,
-                    "conversation_history": get_conversation_history_for_display(),
-                    "last_user_input": "",
-                    "current_user": None,
-                    "show_auth_modal": True,
-                    "auth_mode": "signup",
-                    "auth_error": "Passwords do not match.",
-                },
-                status_code=400,
-            )
-        return templates.TemplateResponse(
-            "auth.html",
-            {"request": request, "mode": "signup", "error": "Passwords do not match.", "success": None},
-            status_code=400,
-        )
-    if len(password) < 8:
-        if next_url == "/chatbot":
-            return templates.TemplateResponse(
-                "chatbot.html",
-                {
-                    "request": request,
-                    "chatbot_reply": None,
-                    "conversation_history": get_conversation_history_for_display(),
-                    "last_user_input": "",
-                    "current_user": None,
-                    "show_auth_modal": True,
-                    "auth_mode": "signup",
-                    "auth_error": "Password must be at least 8 characters.",
-                },
-                status_code=400,
-            )
-        return templates.TemplateResponse(
-            "auth.html",
-            {"request": request, "mode": "signup", "error": "Password must be at least 8 characters.", "success": None},
-            status_code=400,
-        )
-    if get_user_by_email(email):
-        if next_url == "/chatbot":
-            return templates.TemplateResponse(
-                "chatbot.html",
-                {
-                    "request": request,
-                    "chatbot_reply": None,
-                    "conversation_history": get_conversation_history_for_display(),
-                    "last_user_input": "",
-                    "current_user": None,
-                    "show_auth_modal": True,
-                    "auth_mode": "signup",
-                    "auth_error": "An account with this email already exists.",
-                },
-                status_code=400,
-            )
-        return templates.TemplateResponse(
-            "auth.html",
-            {"request": request, "mode": "signup", "error": "An account with this email already exists.", "success": None},
-            status_code=400,
-        )
-
-    create_user(name=name, email=email, password=password)
-    return templates.TemplateResponse(
-        "auth.html",
-        {
-            "request": request,
-            "mode": "login",
-            "error": None,
-            "success": "Account created successfully. Please log in.",
-        },
-    )
-
-@app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    if request.session.get("user"):
-        return RedirectResponse(url="/chatbot", status_code=303)
-    next_url = request.query_params.get("next", "/chatbot")
-    return templates.TemplateResponse(
-        "auth.html",
-        {"request": request, "mode": "login", "error": None, "success": None, "next_url": next_url},
-    )
-
-@app.post("/login", response_class=HTMLResponse)
-async def login_submit(
-    request: Request,
-    email: str = Form(...),
-    password: str = Form(...),
-    next_url: str = Form("/chatbot"),
-):
-    user = get_user_by_email(email)
-    if not user or not verify_password(password, user["password_hash"]):
-        if next_url == "/chatbot":
-            return templates.TemplateResponse(
-                "chatbot.html",
-                {
-                    "request": request,
-                    "chatbot_reply": None,
-                    "conversation_history": get_conversation_history_for_display(),
-                    "last_user_input": "",
-                    "current_user": None,
-                    "show_auth_modal": True,
-                    "auth_mode": "login",
-                    "auth_error": "Invalid email or password.",
-                },
-                status_code=401,
-            )
-        return templates.TemplateResponse(
-            "auth.html",
-            {"request": request, "mode": "login", "error": "Invalid email or password.", "success": None},
-            status_code=401,
-        )
-
-    request.session["user"] = {"id": user["id"], "name": user["name"], "email": user["email"]}
-    safe_next = next_url if next_url.startswith("/") else "/chatbot"
-    return RedirectResponse(url=safe_next, status_code=303)
-
-@app.get("/logout")
-async def logout(request: Request):
-    request.session.clear()
-    return RedirectResponse(url="/login", status_code=303)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
