@@ -494,8 +494,8 @@ async def startup_event():
 @app.get("/chatbot", response_class=HTMLResponse)
 async def chatbot_page(request: Request):
     current_user = request.session.get("user")
-    if not current_user:
-        return RedirectResponse(url="/login?next=/chatbot", status_code=303)
+    auth_mode = request.query_params.get("auth", "login")
+    show_auth_modal = current_user is None
     return templates.TemplateResponse(
         "chatbot.html",
         {
@@ -504,6 +504,9 @@ async def chatbot_page(request: Request):
             "conversation_history": get_conversation_history_for_display(),
             "last_user_input": "",
             "current_user": current_user,
+            "show_auth_modal": show_auth_modal,
+            "auth_mode": "signup" if auth_mode == "signup" else "login",
+            "auth_error": None,
         },
     )
 
@@ -511,7 +514,20 @@ async def chatbot_page(request: Request):
 async def chatbot_submit(request: Request, user_input: str = Form(...)):
     current_user = request.session.get("user")
     if not current_user:
-        return RedirectResponse(url="/login?next=/chatbot", status_code=303)
+        return templates.TemplateResponse(
+            "chatbot.html",
+            {
+                "request": request,
+                "chatbot_reply": None,
+                "conversation_history": get_conversation_history_for_display(),
+                "last_user_input": "",
+                "current_user": None,
+                "show_auth_modal": True,
+                "auth_mode": "login",
+                "auth_error": "Please log in or sign up to send messages.",
+            },
+            status_code=401,
+        )
     recent_messages = get_conversation_history(limit=5)
     chatbot_reply = generate_chatbot_response(user_input, recent_messages=recent_messages)
     save_conversation(user_input, chatbot_reply)
@@ -524,6 +540,9 @@ async def chatbot_submit(request: Request, user_input: str = Form(...)):
             "conversation_history": get_conversation_history_for_display(),
             "last_user_input": user_input,
             "current_user": current_user,
+            "show_auth_modal": False,
+            "auth_mode": "login",
+            "auth_error": None,
         },
     )
 
@@ -541,20 +560,66 @@ async def signup_submit(
     email: str = Form(...),
     password: str = Form(...),
     confirm_password: str = Form(...),
+    next_url: str = Form("/login"),
 ):
     if password != confirm_password:
+        if next_url == "/chatbot":
+            return templates.TemplateResponse(
+                "chatbot.html",
+                {
+                    "request": request,
+                    "chatbot_reply": None,
+                    "conversation_history": get_conversation_history_for_display(),
+                    "last_user_input": "",
+                    "current_user": None,
+                    "show_auth_modal": True,
+                    "auth_mode": "signup",
+                    "auth_error": "Passwords do not match.",
+                },
+                status_code=400,
+            )
         return templates.TemplateResponse(
             "auth.html",
             {"request": request, "mode": "signup", "error": "Passwords do not match.", "success": None},
             status_code=400,
         )
     if len(password) < 8:
+        if next_url == "/chatbot":
+            return templates.TemplateResponse(
+                "chatbot.html",
+                {
+                    "request": request,
+                    "chatbot_reply": None,
+                    "conversation_history": get_conversation_history_for_display(),
+                    "last_user_input": "",
+                    "current_user": None,
+                    "show_auth_modal": True,
+                    "auth_mode": "signup",
+                    "auth_error": "Password must be at least 8 characters.",
+                },
+                status_code=400,
+            )
         return templates.TemplateResponse(
             "auth.html",
             {"request": request, "mode": "signup", "error": "Password must be at least 8 characters.", "success": None},
             status_code=400,
         )
     if get_user_by_email(email):
+        if next_url == "/chatbot":
+            return templates.TemplateResponse(
+                "chatbot.html",
+                {
+                    "request": request,
+                    "chatbot_reply": None,
+                    "conversation_history": get_conversation_history_for_display(),
+                    "last_user_input": "",
+                    "current_user": None,
+                    "show_auth_modal": True,
+                    "auth_mode": "signup",
+                    "auth_error": "An account with this email already exists.",
+                },
+                status_code=400,
+            )
         return templates.TemplateResponse(
             "auth.html",
             {"request": request, "mode": "signup", "error": "An account with this email already exists.", "success": None},
@@ -591,6 +656,21 @@ async def login_submit(
 ):
     user = get_user_by_email(email)
     if not user or not verify_password(password, user["password_hash"]):
+        if next_url == "/chatbot":
+            return templates.TemplateResponse(
+                "chatbot.html",
+                {
+                    "request": request,
+                    "chatbot_reply": None,
+                    "conversation_history": get_conversation_history_for_display(),
+                    "last_user_input": "",
+                    "current_user": None,
+                    "show_auth_modal": True,
+                    "auth_mode": "login",
+                    "auth_error": "Invalid email or password.",
+                },
+                status_code=401,
+            )
         return templates.TemplateResponse(
             "auth.html",
             {"request": request, "mode": "login", "error": "Invalid email or password.", "success": None},
