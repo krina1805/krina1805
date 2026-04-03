@@ -16,11 +16,21 @@
             color: #111827;
         }
         .card {
-            width: min(460px, 92vw);
+            width: min(880px, 94vw);
             background: #fff;
             border: 1px solid #e9d5ff;
             border-radius: 16px;
             box-shadow: 0 14px 32px rgba(147, 51, 234, 0.18);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+        }
+        .panel-info {
+            padding: 24px;
+            background: linear-gradient(170deg, #fdf2f8 0%, #eef2ff 60%, #e0f2fe 100%);
+            border-right: 1px solid #e9d5ff;
+        }
+        .panel-form {
             padding: 24px;
         }
         h1 { margin: 0 0 8px; }
@@ -61,37 +71,60 @@
             text-align: center;
         }
         a { color: #7c3aed; text-decoration: none; font-weight: 600; }
+        ul {
+            margin: 14px 0 0;
+            padding-left: 18px;
+            color: #374151;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+        @media (max-width: 760px) {
+            .card { grid-template-columns: 1fr; }
+            .panel-info { border-right: 0; border-bottom: 1px solid #e9d5ff; }
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>{% if mode == "signup" %}Create Account{% else %}Welcome Back{% endif %}</h1>
-        <p class="subtitle">{% if mode == "signup" %}Sign up to start chatting with the assistant.{% else %}Log in to continue.{% endif %}</p>
+        <div class="panel-info">
+            <h1>Assistant Portal</h1>
+            <p class="subtitle">Secure access to your colorful chatbot experience.</p>
+            <ul>
+                <li>Server-rendered pages (no JavaScript required)</li>
+                <li>Session-based login and logout</li>
+                <li>Saved chat history with timestamps</li>
+            </ul>
+        </div>
+        <div class="panel-form">
+            <h1>{% if mode == "signup" %}Create Account{% else %}Welcome Back{% endif %}</h1>
+            <p class="subtitle">{% if mode == "signup" %}Sign up to start chatting with the assistant.{% else %}Log in to continue.{% endif %}</p>
 
-        {% if error %}
-        <div class="error">{{ error }}</div>
-        {% endif %}
-        {% if success %}
-        <div class="success">{{ success }}</div>
-        {% endif %}
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+            {% if success %}
+            <div class="success">{{ success }}</div>
+            {% endif %}
 
-        {% if mode == "signup" %}
-        <form method="post" action="/signup">
-            <div class="field"><label for="name">Full Name</label><input id="name" name="name" required></div>
-            <div class="field"><label for="email">Email</label><input id="email" type="email" name="email" required></div>
-            <div class="field"><label for="password">Password</label><input id="password" type="password" name="password" required></div>
-            <div class="field"><label for="confirm_password">Confirm Password</label><input id="confirm_password" type="password" name="confirm_password" required></div>
-            <button type="submit">Sign Up</button>
-        </form>
-        <p class="switch">Already have an account? <a href="/login">Login</a></p>
-        {% else %}
-        <form method="post" action="/login">
-            <div class="field"><label for="email">Email</label><input id="email" type="email" name="email" required></div>
-            <div class="field"><label for="password">Password</label><input id="password" type="password" name="password" required></div>
-            <button type="submit">Login</button>
-        </form>
-        <p class="switch">Need an account? <a href="/signup">Create one</a></p>
-        {% endif %}
+            {% if mode == "signup" %}
+            <form method="post" action="/signup">
+                <div class="field"><label for="name">Full Name</label><input id="name" name="name" required></div>
+                <div class="field"><label for="email">Email</label><input id="email" type="email" name="email" required></div>
+                <div class="field"><label for="password">Password</label><input id="password" type="password" name="password" minlength="8" required></div>
+                <div class="field"><label for="confirm_password">Confirm Password</label><input id="confirm_password" type="password" name="confirm_password" required></div>
+                <button type="submit">Sign Up</button>
+            </form>
+            <p class="switch">Already have an account? <a href="/login">Login</a></p>
+            {% else %}
+            <form method="post" action="/login">
+                <input type="hidden" name="next_url" value="{{ next_url or '/chatbot' }}">
+                <div class="field"><label for="email">Email</label><input id="email" type="email" name="email" required></div>
+                <div class="field"><label for="password">Password</label><input id="password" type="password" name="password" required></div>
+                <button type="submit">Login</button>
+            </form>
+            <p class="switch">Need an account? <a href="/signup">Create one</a></p>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>

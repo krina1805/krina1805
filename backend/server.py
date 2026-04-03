@@ -494,6 +494,8 @@ async def startup_event():
 @app.get("/chatbot", response_class=HTMLResponse)
 async def chatbot_page(request: Request):
     current_user = request.session.get("user")
+    if not current_user:
+        return RedirectResponse(url="/login?next=/chatbot", status_code=303)
     return templates.TemplateResponse(
         "chatbot.html",
         {
@@ -508,6 +510,8 @@ async def chatbot_page(request: Request):
 @app.post("/chatbot", response_class=HTMLResponse)
 async def chatbot_submit(request: Request, user_input: str = Form(...)):
     current_user = request.session.get("user")
+    if not current_user:
+        return RedirectResponse(url="/login?next=/chatbot", status_code=303)
     recent_messages = get_conversation_history(limit=5)
     chatbot_reply = generate_chatbot_response(user_input, recent_messages=recent_messages)
     save_conversation(user_input, chatbot_reply)
@@ -570,9 +574,12 @@ async def signup_submit(
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
+    if request.session.get("user"):
+        return RedirectResponse(url="/chatbot", status_code=303)
+    next_url = request.query_params.get("next", "/chatbot")
     return templates.TemplateResponse(
         "auth.html",
-        {"request": request, "mode": "login", "error": None, "success": None},
+        {"request": request, "mode": "login", "error": None, "success": None, "next_url": next_url},
     )
 
 @app.post("/login", response_class=HTMLResponse)
@@ -580,6 +587,7 @@ async def login_submit(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
+    next_url: str = Form("/chatbot"),
 ):
     user = get_user_by_email(email)
     if not user or not verify_password(password, user["password_hash"]):
@@ -590,7 +598,8 @@ async def login_submit(
         )
 
     request.session["user"] = {"id": user["id"], "name": user["name"], "email": user["email"]}
-    return RedirectResponse(url="/chatbot", status_code=303)
+    safe_next = next_url if next_url.startswith("/") else "/chatbot"
+    return RedirectResponse(url=safe_next, status_code=303)
 
 @app.get("/logout")
 async def logout(request: Request):

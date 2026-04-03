@@ -78,10 +78,23 @@
             display: flex;
             gap: 10px;
             font-size: 13px;
+            align-items: center;
         }
         .auth-links a {
             text-decoration: none;
             color: #6d28d9;
+            font-weight: 700;
+            background: #f5f3ff;
+            border: 1px solid #ddd6fe;
+            border-radius: 999px;
+            padding: 4px 10px;
+        }
+        .user-pill {
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #ecfeff;
+            border: 1px solid #bae6fd;
+            color: #0f766e;
             font-weight: 700;
         }
         h1 {
@@ -206,7 +219,7 @@
                 <h1>Assistant</h1>
                 <div class="auth-links">
                     {% if current_user %}
-                    <span>Hi, {{ current_user.name }}</span>
+                    <span class="user-pill">Hi, {{ current_user.name }}</span>
                     <a href="/logout">Logout</a>
                     {% else %}
                     <a href="/login">Login</a>
