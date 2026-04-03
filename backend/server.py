@@ -1,8 +1,10 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Form, Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -11,10 +13,12 @@ import sqlite3
 import hashlib
 import hmac
 import secrets
+import requests
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 ROOT_DIR = Path(__file__).parent
@@ -260,6 +264,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SESSION_SECRET", "dev-session-secret"))
 
 # Configure logging
 logging.basicConfig(
@@ -286,12 +291,37 @@ def init_sqlite_db():
             """
             CREATE TABLE IF NOT EXISTS chatbot_users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
                 name TEXT NOT NULL,
                 email TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
+                timezone TEXT NOT NULL DEFAULT 'UTC',
+                preferences TEXT NOT NULL DEFAULT '{}',
+                store_data INTEGER NOT NULL DEFAULT 1,
                 created_at TEXT NOT NULL
             )
             """
+        )
+        # Backward-compatible schema migrations for existing local DBs.
+        for alter in [
+            "ALTER TABLE chatbot_users ADD COLUMN username TEXT",
+            "ALTER TABLE chatbot_users ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC'",
+            "ALTER TABLE chatbot_users ADD COLUMN preferences TEXT NOT NULL DEFAULT '{}'",
+            "ALTER TABLE chatbot_users ADD COLUMN store_data INTEGER NOT NULL DEFAULT 1",
+        ]:
+            try:
+                conn.execute(alter)
+            except sqlite3.OperationalError:
+                pass
+        conn.execute(
+            """
+            UPDATE chatbot_users
+            SET username = lower(replace(email, '@', '_'))
+            WHERE username IS NULL OR trim(username) = ''
+            """
+        )
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_chatbot_users_username ON chatbot_users(username)"
         )
         conn.commit()
 
@@ -312,21 +342,103 @@ def get_user_by_email(email: str):
     with sqlite3.connect(SQLITE_DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         user = conn.execute(
-            "SELECT id, name, email, password_hash, created_at FROM chatbot_users WHERE email = ?",
+            "SELECT id, username, name, email, password_hash, timezone, preferences, store_data, created_at FROM chatbot_users WHERE email = ?",
             (email.lower().strip(),),
         ).fetchone()
     return dict(user) if user else None
 
-def create_user(name: str, email: str, password: str):
+def get_user_by_username(username: str):
+    with sqlite3.connect(SQLITE_DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        user = conn.execute(
+            "SELECT id, username, name, email, password_hash, timezone, preferences, store_data, created_at FROM chatbot_users WHERE username = ?",
+            (username.strip().lower(),),
+        ).fetchone()
+    return dict(user) if user else None
+
+def create_user(username: str, name: str, email: str, password: str, user_timezone: str = "UTC"):
     with sqlite3.connect(SQLITE_DB_PATH) as conn:
         conn.execute(
             """
-            INSERT INTO chatbot_users (name, email, password_hash, created_at)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO chatbot_users (username, name, email, password_hash, timezone, preferences, store_data, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (name.strip(), email.lower().strip(), hash_password(password), datetime.now(timezone.utc).isoformat()),
+            (
+                username.strip().lower(),
+                name.strip(),
+                email.lower().strip(),
+                hash_password(password),
+                user_timezone,
+                "{}",
+                1,
+                datetime.now(timezone.utc).isoformat(),
+            ),
         )
         conn.commit()
+
+def update_user_settings(user_id: int, name: str, user_timezone: str, preferences: str, store_data: bool):
+    with sqlite3.connect(SQLITE_DB_PATH) as conn:
+        conn.execute(
+            """
+            UPDATE chatbot_users
+            SET name = ?, timezone = ?, preferences = ?, store_data = ?
+            WHERE id = ?
+            """,
+            (name.strip(), user_timezone, preferences, 1 if store_data else 0, user_id),
+        )
+        conn.commit()
+
+def get_user_by_id(user_id: int):
+    with sqlite3.connect(SQLITE_DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        user = conn.execute(
+            "SELECT id, username, name, email, timezone, preferences, store_data, created_at FROM chatbot_users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    return dict(user) if user else None
+
+def get_daily_highlights(user_timezone: str):
+    try:
+        now_local = datetime.now(ZoneInfo(user_timezone))
+    except Exception:
+        now_local = datetime.now(timezone.utc)
+        user_timezone = "UTC"
+
+    weather_summary = "Weather data unavailable"
+    news_summary = "News feed unavailable"
+
+    try:
+        weather_resp = requests.get(
+            "https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&current=temperature_2m,weather_code",
+            timeout=6,
+        )
+        weather_data = weather_resp.json().get("current", {})
+        weather_summary = f"{weather_data.get('temperature_2m', 'N/A')}°C (code {weather_data.get('weather_code', 'N/A')})"
+    except Exception:
+        pass
+
+    try:
+        news_resp = requests.get("https://hn.algolia.com/api/v1/search?tags=front_page", timeout=6)
+        hits = news_resp.json().get("hits", [])
+        if hits:
+            news_summary = hits[0].get("title", "Top story unavailable")
+    except Exception:
+        pass
+
+    insights = [
+        "Small daily improvements compound into major results.",
+        "Protect focused time for your highest-impact task first.",
+        "Ask better questions to unlock better answers.",
+    ]
+    insight = insights[now_local.day % len(insights)]
+
+    return {
+        "current_time": now_local.strftime("%Y-%m-%d %H:%M"),
+        "timezone": user_timezone,
+        "today_highlight": f"Top story: {news_summary}",
+        "weather": weather_summary,
+        "genius_insight": insight,
+    }
 
 def generate_chatbot_response(user_input: str, recent_messages: Optional[List[dict]] = None) -> str:
     text = user_input.lower().strip()
@@ -490,6 +602,11 @@ async def startup_event():
 
 @app.get("/chatbot", response_class=HTMLResponse)
 async def chatbot_page(request: Request):
+    user_session = request.session.get("user")
+    if not user_session:
+        return RedirectResponse(url="/login", status_code=303)
+    user = get_user_by_id(user_session["id"])
+    highlights = get_daily_highlights(user.get("timezone", "UTC")) if user else None
     return templates.TemplateResponse(
         "chatbot.html",
         {
@@ -497,14 +614,22 @@ async def chatbot_page(request: Request):
             "chatbot_reply": None,
             "conversation_history": get_conversation_history_for_display(),
             "last_user_input": "",
+            "user": user,
+            "highlights": highlights,
         },
     )
 
 @app.post("/chatbot", response_class=HTMLResponse)
 async def chatbot_submit(request: Request, user_input: str = Form(...)):
+    user_session = request.session.get("user")
+    if not user_session:
+        return RedirectResponse(url="/login", status_code=303)
+    user = get_user_by_id(user_session["id"])
     recent_messages = get_conversation_history(limit=5)
     chatbot_reply = generate_chatbot_response(user_input, recent_messages=recent_messages)
-    save_conversation(user_input, chatbot_reply)
+    if user and int(user.get("store_data", 1)) == 1:
+        save_conversation(user_input, chatbot_reply)
+    highlights = get_daily_highlights(user.get("timezone", "UTC")) if user else None
 
     return templates.TemplateResponse(
         "chatbot.html",
@@ -513,6 +638,85 @@ async def chatbot_submit(request: Request, user_input: str = Form(...)):
             "chatbot_reply": chatbot_reply,
             "conversation_history": get_conversation_history_for_display(),
             "last_user_input": user_input,
+            "user": user,
+            "highlights": highlights,
+        },
+    )
+
+@app.get("/signup", response_class=HTMLResponse)
+async def signup_page(request: Request):
+    return templates.TemplateResponse("auth.html", {"request": request, "mode": "signup", "error": None})
+
+@app.post("/signup", response_class=HTMLResponse)
+async def signup_submit(
+    request: Request,
+    username: str = Form(...),
+    name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    timezone_name: str = Form("UTC"),
+):
+    if len(password) < 8:
+        return templates.TemplateResponse("auth.html", {"request": request, "mode": "signup", "error": "Password must be at least 8 characters."}, status_code=400)
+    if get_user_by_email(email) or get_user_by_username(username):
+        return templates.TemplateResponse("auth.html", {"request": request, "mode": "signup", "error": "Username or email already exists."}, status_code=400)
+    create_user(username=username, name=name, email=email, password=password, user_timezone=timezone_name)
+    return RedirectResponse(url="/login", status_code=303)
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse("auth.html", {"request": request, "mode": "login", "error": None})
+
+@app.post("/login")
+async def login_submit(request: Request, username_or_email: str = Form(...), password: str = Form(...)):
+    user = get_user_by_email(username_or_email) or get_user_by_username(username_or_email)
+    if not user or not verify_password(password, user["password_hash"]):
+        return templates.TemplateResponse("auth.html", {"request": request, "mode": "login", "error": "Invalid credentials."}, status_code=401)
+    request.session["user"] = {"id": user["id"], "username": user["username"]}
+    return RedirectResponse(url="/chatbot", status_code=303)
+
+@app.get("/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=303)
+
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    user_session = request.session.get("user")
+    if not user_session:
+        return RedirectResponse(url="/login", status_code=303)
+    user = get_user_by_id(user_session["id"])
+    return templates.TemplateResponse("settings.html", {"request": request, "user": user, "message": None})
+
+@app.post("/settings", response_class=HTMLResponse)
+async def settings_submit(
+    request: Request,
+    name: str = Form(...),
+    timezone_name: str = Form("UTC"),
+    preferences: str = Form(""),
+    store_data: Optional[str] = Form(None),
+):
+    user_session = request.session.get("user")
+    if not user_session:
+        return RedirectResponse(url="/login", status_code=303)
+    update_user_settings(
+        user_id=user_session["id"],
+        name=name,
+        user_timezone=timezone_name,
+        preferences=preferences,
+        store_data=store_data == "on",
+    )
+    user = get_user_by_id(user_session["id"])
+    return templates.TemplateResponse("settings.html", {"request": request, "user": user, "message": "Settings updated successfully."})
+
+@app.get("/login/social/{provider}", response_class=HTMLResponse)
+async def social_login_placeholder(request: Request, provider: str):
+    return templates.TemplateResponse(
+        "auth.html",
+        {
+            "request": request,
+            "mode": "login",
+            "error": f"{provider.title()} social login is available when OAuth credentials are configured.",
         },
     )
 

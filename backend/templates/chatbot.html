@@ -70,9 +70,15 @@
         }
         .header-top {
             display: flex;
-            justify-content: flex-start;
+            justify-content: space-between;
             align-items: center;
             gap: 10px;
+        }
+        .top-links a {
+            text-decoration: none;
+            margin-left: 8px;
+            color: #6d28d9;
+            font-weight: 700;
         }
         h1 {
             margin: 0 0 6px;
@@ -194,8 +200,22 @@
         <div class="chat-header">
             <div class="header-top">
                 <h1>Assistant</h1>
+                <div class="top-links">
+                    <span>{{ user.name }}</span>
+                    <a href="/settings">Settings</a>
+                    <a href="/logout">Logout</a>
+                </div>
             </div>
             <p class="subtitle">A colorful server-rendered chat experience powered by Python and SQLite history.</p>
+            {% if highlights %}
+            <div class="notice">
+                <strong>Today’s Highlights</strong><br>
+                Time: {{ highlights.current_time }} ({{ highlights.timezone }})<br>
+                Weather: {{ highlights.weather }}<br>
+                {{ highlights.today_highlight }}<br>
+                Genius Insight: {{ highlights.genius_insight }}
+            </div>
+            {% endif %}
             <div class="chip-list">
                 <span class="chip">Features</span>
                 <span class="chip">Pricing</span>
@@ -205,7 +225,7 @@
                 <span class="chip">Billing</span>
                 <span class="chip">Integrations</span>
             </div>
-            <div class="notice">Tip: Avoid sharing passwords, OTPs, or full card numbers in chat.</div>
+            <div class="notice">Tip: Avoid sharing passwords, OTPs, or full card numbers in chat. Data sharing outside this system is disabled by policy.</div>
             <div class="quick-actions">
                 <form method="post" action="/chatbot"><button type="submit" name="user_input" value="Which plan fits a small team?">Which plan fits a small team?</button></form>
                 <form method="post" action="/chatbot"><button type="submit" name="user_input" value="How do I contact support?">How do I contact support?</button></form>

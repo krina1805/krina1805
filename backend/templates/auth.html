@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if mode == "signup" %}Sign Up{% else %}Login{% endif %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
+        .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; }
+        .field { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 4px; font-size: 14px; }
+        input { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        button { width: 100%; padding: 11px; border: 0; border-radius: 8px; color: white; background: #7c3aed; cursor: pointer; margin-top: 8px; }
+        .error { background: #fee2e2; color: #991b1b; border-radius: 8px; padding: 8px; margin-bottom: 10px; }
+        .links { margin-top: 12px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>{% if mode == "signup" %}Create account{% else %}Login{% endif %}</h1>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+        {% if mode == "signup" %}
+        <form method="post" action="/signup">
+            <div class="field"><label for="username">Username</label><input id="username" name="username" required></div>
+            <div class="field"><label for="name">Full Name</label><input id="name" name="name" required></div>
+            <div class="field"><label for="email">Email</label><input id="email" type="email" name="email" required></div>
+            <div class="field"><label for="password">Password</label><input id="password" type="password" name="password" minlength="8" required></div>
+            <div class="field"><label for="timezone_name">Timezone (e.g. America/New_York)</label><input id="timezone_name" name="timezone_name" value="UTC" required></div>
+            <button type="submit">Sign Up</button>
+        </form>
+        <div class="links">Already have an account? <a href="/login">Login</a></div>
+        {% else %}
+        <form method="post" action="/login">
+            <div class="field"><label for="username_or_email">Username or Email</label><input id="username_or_email" name="username_or_email" required></div>
+            <div class="field"><label for="password">Password</label><input id="password" type="password" name="password" required></div>
+            <button type="submit">Login</button>
+        </form>
+        <div class="links">No account? <a href="/signup">Sign up</a></div>
+        <div class="links">Social login: <a href="/login/social/google">Google</a> · <a href="/login/social/microsoft">Microsoft</a></div>
+        {% endif %}
+    </div>
+</body>
+</html>
