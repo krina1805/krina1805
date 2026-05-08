@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings & Privacy</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 720px; margin: 30px auto; padding: 0 16px; }
+        .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; }
+        .field { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 6px; font-size: 14px; }
+        input, textarea { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        button { padding: 10px 14px; border: 0; border-radius: 8px; color: white; background: #2563eb; cursor: pointer; }
+        .message { background: #dcfce7; color: #166534; padding: 8px; border-radius: 8px; margin-bottom: 10px; }
+        .policy { margin-top: 16px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Settings & Privacy</h1>
+        <p><a href="/chatbot">← Back to chatbot</a> · <a href="/logout">Logout</a></p>
+        {% if message %}<div class="message">{{ message }}</div>{% endif %}
+        <form method="post" action="/settings">
+            <div class="field">
+                <label for="name">Display Name</label>
+                <input id="name" name="name" value="{{ user.name }}" required>
+            </div>
+            <div class="field">
+                <label for="timezone_name">Timezone</label>
+                <input id="timezone_name" name="timezone_name" value="{{ user.timezone or 'UTC' }}" required>
+            </div>
+            <div class="field">
+                <label for="preferences">Preferences (study, productivity, entertainment, etc.)</label>
+                <textarea id="preferences" name="preferences" rows="4">{{ user.preferences }}</textarea>
+            </div>
+            <div class="field">
+                <label><input type="checkbox" name="store_data" {% if user.store_data %}checked{% endif %}> Store my chatbot conversations</label>
+            </div>
+            <button type="submit">Save settings</button>
+        </form>
+        <div class="policy">
+            <strong>Privacy policy:</strong> Your data stays inside this system and is not shared externally by default.
+            You can disable conversation storage at any time.
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistant</title>
+    <style>
+        :root {
+            --bg: #eef2ff;
+            --panel: #ffffff;
+            --text: #111827;
+            --muted: #6b7280;
+            --brand: #ec4899;
+            --brand-dark: #db2777;
+            --user-bg: #f5d0fe;
+            --bot-bg: #bfdbfe;
+            --border: #ddd6fe;
+            --shadow: 0 16px 38px rgba(168, 85, 247, 0.22);
+        }
+        body {
+            font-family: Inter, Arial, sans-serif;
+            max-width: 960px;
+            margin: 0 auto;
+            min-height: 100vh;
+            line-height: 1.5;
+            color: var(--text);
+            padding: 24px 16px 40px;
+            background: radial-gradient(circle at 10% 10%, #fbcfe8 0%, #eef2ff 32%),
+                        radial-gradient(circle at 90% 20%, #bfdbfe 0%, #eef2ff 28%),
+                        radial-gradient(circle at 50% 90%, #ddd6fe 0%, #eef2ff 30%);
+        }
+        .chat-wrapper {
+            background: var(--panel);
+            border: 1px solid #e9d5ff;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .quick-actions form {
+            padding: 0;
+            border: none;
+            background: transparent;
+            display: block;
+        }
+        .quick-actions button {
+            width: 100%;
+            text-align: left;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #f5d0fe;
+            background: linear-gradient(90deg, #fdf2f8 0%, #eef2ff 100%);
+            color: #831843;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(236, 72, 153, 0.08);
+        }
+        .quick-actions button:hover {
+            background: linear-gradient(90deg, #fce7f3 0%, #e0e7ff 100%);
+        }
+        .chat-header {
+            padding: 22px 24px 18px;
+            border-bottom: 1px solid #f5d0fe;
+            background: linear-gradient(110deg, #fdf2f8 0%, #eef2ff 50%, #e0f2fe 100%);
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .top-links a {
+            text-decoration: none;
+            margin-left: 8px;
+            color: #6d28d9;
+            font-weight: 700;
+        }
+        h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+        }
+        h2 {
+            margin: 0 0 12px;
+            font-size: 20px;
+        }
+        .subtitle {
+            margin: 0 0 10px;
+            color: var(--muted);
+        }
+        .notice {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #fff7ed, #fef3c7);
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            font-size: 13px;
+        }
+        form {
+            margin: 0;
+            display: flex;
+            gap: 12px;
+            padding: 18px 24px 24px;
+            border-top: 1px solid #f5d0fe;
+            background: linear-gradient(180deg, #ffffff 0%, #fdf2f8 100%);
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 14px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: 1px solid #e9d5ff;
+            background: #fff;
+        }
+        button {
+            padding: 12px 18px;
+            border: none;
+            background: linear-gradient(90deg, #ec4899, #a855f7);
+            color: #fff;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 8px 18px rgba(236, 72, 153, 0.28);
+        }
+        button:hover {
+            background: linear-gradient(90deg, #db2777, #9333ea);
+        }
+        .chat-body {
+            padding: 20px 24px;
+            max-height: 520px;
+            overflow-y: auto;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #fdf2f8 100%);
+        }
+        .reply-box, .history-item {
+            border: 1px solid #e9d5ff;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%);
+        }
+        .history-item {
+            margin-bottom: 14px;
+        }
+        .bubble-user, .bubble-bot {
+            margin: 0 0 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
+        }
+        .bubble-user {
+            background: linear-gradient(90deg, #fce7f3, #f5d0fe);
+            border: 1px solid #f5b4e6;
+        }
+        .bubble-bot {
+            background: linear-gradient(90deg, #dbeafe, #bfdbfe);
+            border: 1px solid #93c5fd;
+        }
+        .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #4b5563;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .meta {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .empty-state {
+            color: var(--muted);
+            text-align: center;
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 18px 12px;
+            background: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-wrapper">
+        <div class="chat-header">
+            <div class="header-top">
+                <h1>💬 Smart Privacy-First Chatbot</h1>
+                <div class="top-links">
+                    <span>👤 {{ user.name }}</span>
+                    <a href="/settings">⚙️ Settings</a>
+                    <a href="/logout">🚪 Logout</a>
+                </div>
+            </div>
+            <p class="subtitle">Clean, secure, and fast chatbot experience.</p>
+            {% if highlights %}
+            <div class="notice">
+                <strong>✨ Today’s Highlights</strong><br>
+                🕒 {{ highlights.current_time }} ({{ highlights.timezone }})<br>
+                🌤️ Weather: {{ highlights.weather }}<br>
+                📰 {{ highlights.today_highlight }}<br>
+                💡 Genius Insight: {{ highlights.genius_insight }}
+            </div>
+            {% endif %}
+            <div class="notice">🔒 Privacy policy: Your data is not shared outside this system. You control storage from settings.</div>
+            <div class="quick-actions">
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="Give me study tips for today">📘 Study tips for today</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="Suggest productivity hacks">⚡ Productivity hacks</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="What is today's weather and top news?">🌍 Weather + top news</button></form>
+                <form method="post" action="/chatbot"><button type="submit" name="user_input" value="Give me a genius insight">🧠 Daily genius insight</button></form>
+            </div>
+        </div>
+
+        <div class="chat-body">
+            {% if chatbot_reply %}
+            <div class="reply-box">
+                <div class="label">Latest Reply</div>
+                <p>{{ chatbot_reply }}</p>
+            </div>
+            {% endif %}
+
+            <h2>Conversation History</h2>
+            {% if conversation_history %}
+                {% for item in conversation_history %}
+                <div class="history-item">
+                    <div class="label">You</div>
+                    <p class="bubble-user">{{ item.user_input }}</p>
+                    <div class="label">Assistant</div>
+                    <p class="bubble-bot">{{ item.chatbot_response }}</p>
+                    <p class="meta">Timestamp: {{ item.created_at_display }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty-state">No conversations yet. Start with: “Give me study tips for today”.</p>
+            {% endif %}
+        </div>
+
+        <form method="post" action="/chatbot">
+            <input
+                type="text"
+                name="user_input"
+                aria-label="Type your message"
+                placeholder="Type your message (e.g., I need support help)"
+                required
+                autofocus
+                value="{{ last_user_input }}"
+            />
+            <button type="submit">Send</button>
+        </form>
+    </div>
+</body>
+</html>
